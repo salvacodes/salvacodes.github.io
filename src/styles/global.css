@@ -1,0 +1,13 @@
+@import 'tailwindcss';
+
+@theme {
+    --color-brand-primary: #00ff41;
+    --font-mono: 'Fira Code', monospace;
+}
+
+html,
+body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+}
