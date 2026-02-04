@@ -1,17 +1,10 @@
 {
   "extends": "astro/tsconfigs/strict",
-  "include": [".astro/types.d.ts", "**/*"],
-  "exclude": ["dist"],
+  "include": [".astro/types.d.ts", "src/**/*"],
+  "exclude": ["dist", "node_modules", ".astro"],
   "compilerOptions": {
     "jsx": "preserve",
     "jsxImportSource": "vue",
-    "types": ["vitest/globals", "astro/client", "@types/node"],
-    "plugins": [
-      {
-        "name": "@vue/typescript-plugin",
-        "location": "node_modules/@vue/language-server",
-        "languages": ["vue"]
-      }
-    ]
+    "types": ["astro/client"]
   }
 }
