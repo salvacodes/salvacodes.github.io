@@ -2,7 +2,7 @@
 const terminalLines = [
   { label: 'Status', value: 'System Initializing...', color: 'text-emerald-500' },
   { label: 'Phase', value: 'Brainstorming...', color: 'text-sky-500' },
-  { label: 'Security', value: 'Hardening...', color: 'text-amber-500' },
+  { label: 'Security', value: 'Hardening...', color: 'text-amber-500' }
 ]
 </script>
 
