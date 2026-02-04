@@ -3,7 +3,8 @@
   "type": "module",
   "version": "0.0.1-alpha",
   "scripts": {
-    "check": "biome check --write",
+    "check": "biome check",
+    "check:fix": "biome check --write",
     "test": "vitest run",
     "dev": "astro dev",
     "build": "astro build",
