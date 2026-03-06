@@ -1,8 +1,43 @@
 ---
-import ComingSoon from '../components/ComingSoon.vue'
+import Terminal from '../components/Terminal.vue'
 import Layout from '../layouts/Layout.astro'
+
+const terminalLines = [
+  { label: 'Status', value: 'System Initializing...', color: 'text-emerald-500' },
+  { label: 'Phase', value: 'Brainstorming...', color: 'text-sky-500' },
+  { label: 'Security', value: 'Hardening...', color: 'text-amber-500' }
+]
 ---
 
 <Layout title="Coming Soon&trade;">
-    <ComingSoon />
+    <div class="flex flex-col gap-12">
+        <div class="relative container mx-auto px-6 md:h-125 flex flex-col md:block gap-8">
+            <Terminal title="salva.codes --v0.0.1-alpha" initialX={100} initialY={180} client:load>
+                <div class="space-y-2">
+                    {terminalLines.map((line) => (
+                        <div class="flex items-center gap-2">
+                            <span class="text-zinc-500 select-none">[{line.label}]</span>
+                            <span class={line.color}>{line.value}</span>
+                        </div>
+                    ))}
+                </div>
+                <div class="flex items-center gap-3 pt-4">
+                    <span class="text-emerald-500">➜</span>
+                    <div class="flex items-center gap-2">
+                        <span class="text-zinc-100">tail -f progress.log</span>
+                        <span class="h-5 w-2 animate-pulse bg-emerald-500"></span>
+                    </div>
+                </div>
+            </Terminal>
+            <Terminal title="salva.codes" initialX={150} initialY={430} client:load>
+                <div class="flex items-center gap-3">
+                    <span class="text-emerald-500">➜</span>
+                    <div class="flex items-center gap-2">
+                        <span class="text-zinc-100">echo "Comming Soon&trade;"</span>
+                        <span class="h-5 w-2 animate-pulse bg-emerald-500"></span>
+                    </div>
+                </div>
+            </Terminal>
+        </div>
+    </div>
 </Layout>
