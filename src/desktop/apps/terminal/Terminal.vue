@@ -1,6 +1,6 @@
 <script setup lang="ts">
+import { useZIndex } from '@desktop/window/useZIndex'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
-import { useZIndex } from '../composables/useZIndex'
 
 const props = defineProps<{
   title?: string

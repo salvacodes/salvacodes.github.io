@@ -5,6 +5,12 @@
   "compilerOptions": {
     "jsx": "preserve",
     "jsxImportSource": "vue",
-    "types": ["astro/client"]
+    "types": ["astro/client"],
+    "baseUrl": ".",
+    "paths": {
+      "@features/*": ["src/features/*"],
+      "@desktop/*": ["src/desktop/*"],
+      "@shared/*": ["src/shared/*"]
+    }
   }
 }
