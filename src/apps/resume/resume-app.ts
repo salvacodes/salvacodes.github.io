@@ -1,3 +1,7 @@
+import { readSelection, standardContentItems } from '../../desktop/context-menu/content-items'
+import type { MenuEntry, Point } from '../../desktop/context-menu/context-menu-model'
+import { requestContextMenu } from '../../desktop/context-menu/context-menu-request'
+import { observeLongPress } from '../../desktop/context-menu/long-press'
 import { PRINT_DOCUMENT_EVENT, type PrintDocumentDetail } from '../../desktop/print-surface'
 import { APP_ACTIVATE_EVENT, type AppActivateDetail } from '../app-activation'
 import { STUDY_ID_ATTRIBUTE } from './case-study-app'
@@ -47,6 +51,24 @@ export class ResumeApp extends HTMLElement {
     root.append(toolbar, this.#sidebar, this.#pane)
     this.#pane.addEventListener('click', (event) => this.#onPaneClick(event))
     this.#render()
+    this.addEventListener('contextmenu', (event) => {
+      event.preventDefault()
+      this.#requestMenu({ x: event.clientX, y: event.clientY }, event.composedPath()[0] as Element | null)
+    })
+    observeLongPress(this, (point) => this.#requestMenu(point, null))
+  }
+
+  #requestMenu(anchor: Point, target: Element | null): void {
+    const root = this.shadowRoot
+    if (!root) {
+      return
+    }
+    const entries: MenuEntry[] = [
+      ...standardContentItems(target, readSelection(root)),
+      { separator: true },
+      { id: 'print', label: 'Print Resume…', perform: () => this.#requestPrint() }
+    ]
+    requestContextMenu(this, { anchor, entries })
   }
 
   #requestPrint(): void {

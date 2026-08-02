@@ -8,6 +8,10 @@ import './wallpaper'
 import './top-bar'
 import './dock'
 import './activities-overview'
+import './context-menu/context-menu-layer'
+import type { ContextMenuLayer } from './context-menu/context-menu-layer'
+import { CONTEXT_MENU_EVENT, type ContextMenuDetail } from './context-menu/context-menu-request'
+import { deepActiveElement } from './context-menu/focus-target'
 import styles from './desktop-shell.css?inline'
 import type { Dock } from './dock'
 import { PRINT_DOCUMENT_EVENT, type PrintDocumentDetail, printFragment } from './print-surface'
@@ -22,6 +26,28 @@ export class DesktopShell extends HTMLElement {
   #unsubscribe?: () => void
   #resizeListener = (): void => {
     this.#manager.setViewport({ width: window.innerWidth, height: window.innerHeight })
+  }
+  #menuLayer!: ContextMenuLayer
+  #suppressNativeMenu = (event: Event): void => event.preventDefault()
+  #menuKeyListener = (event: KeyboardEvent): void => {
+    if (event.key !== 'ContextMenu' && !(event.key === 'F10' && event.shiftKey)) {
+      return
+    }
+    const target = deepActiveElement()
+    if (!target) {
+      return
+    }
+    event.preventDefault()
+    const bounds = target.getBoundingClientRect()
+    target.dispatchEvent(
+      new MouseEvent('contextmenu', {
+        bubbles: true,
+        composed: true,
+        cancelable: true,
+        clientX: Math.round(bounds.left + bounds.width / 2),
+        clientY: Math.round(bounds.bottom)
+      })
+    )
   }
   #compactQuery = window.matchMedia('(max-width: 768px)')
   #compactListener = (): void => this.#applyCompactMode()
@@ -42,7 +68,10 @@ export class DesktopShell extends HTMLElement {
       root.append(dock)
       const overview = document.createElement('sc-overview') as ActivitiesOverview
       overview.registry = this.#registry
+      overview.manager = this.#manager
       root.append(overview)
+      this.#menuLayer = document.createElement('sc-context-menu') as ContextMenuLayer
+      root.append(this.#menuLayer)
       root.addEventListener('activities-toggle', () => {
         overview.open = !overview.open
       })
@@ -53,9 +82,18 @@ export class DesktopShell extends HTMLElement {
       root.addEventListener(PRINT_DOCUMENT_EVENT, (event) => {
         printFragment((event as CustomEvent<PrintDocumentDetail>).detail.fragment)
       })
+      root.addEventListener(CONTEXT_MENU_EVENT, (event) => {
+        const detail = (event as CustomEvent<ContextMenuDetail>).detail
+        this.#menuLayer.open(detail, deepActiveElement())
+      })
     }
-    this.#unsubscribe = this.#manager.subscribe(() => this.#reconcileWindows())
+    this.#unsubscribe = this.#manager.subscribe(() => {
+      this.#menuLayer.close()
+      this.#reconcileWindows()
+    })
     window.addEventListener('resize', this.#resizeListener)
+    window.addEventListener('contextmenu', this.#suppressNativeMenu)
+    window.addEventListener('keydown', this.#menuKeyListener)
     this.#compactQuery.addEventListener('change', this.#compactListener)
     this.#applyCompactMode()
     if (!this.#hasBooted) {
@@ -67,6 +105,8 @@ export class DesktopShell extends HTMLElement {
   disconnectedCallback(): void {
     this.#unsubscribe?.()
     window.removeEventListener('resize', this.#resizeListener)
+    window.removeEventListener('contextmenu', this.#suppressNativeMenu)
+    window.removeEventListener('keydown', this.#menuKeyListener)
     this.#compactQuery.removeEventListener('change', this.#compactListener)
   }
 

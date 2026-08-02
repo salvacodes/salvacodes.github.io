@@ -1,4 +1,6 @@
 import { afterEach, expect, it, vi } from 'vitest'
+import type { ContextMenuLayer } from './context-menu/context-menu-layer'
+import { CONTEXT_MENU_EVENT, type ContextMenuDetail } from './context-menu/context-menu-request'
 import './desktop-shell'
 import type { DesktopShell } from './desktop-shell'
 
@@ -156,4 +158,94 @@ it('prints a fragment dispatched as a print-document event', () => {
     delete document.documentElement.dataset.printing
     printSpy.mockRestore()
   }
+})
+
+it('mounts a context menu layer', () => {
+  const desktop = mount()
+  expect(desktop.shadowRoot?.querySelector('sc-context-menu')).not.toBeNull()
+})
+
+it('opens the layer when a surface requests a menu', () => {
+  const desktop = mount()
+  const layer = desktop.shadowRoot?.querySelector<ContextMenuLayer>('sc-context-menu')
+  desktop.shadowRoot?.dispatchEvent(
+    new CustomEvent<ContextMenuDetail>(CONTEXT_MENU_EVENT, {
+      bubbles: true,
+      composed: true,
+      detail: { anchor: { x: 50, y: 80 }, entries: [{ id: 'open', label: 'Open' }] }
+    })
+  )
+  expect(layer?.isOpen).toBe(true)
+})
+
+const openMenuLayer = (desktop: DesktopShell): ContextMenuLayer | null | undefined => {
+  desktop.shadowRoot?.dispatchEvent(
+    new CustomEvent<ContextMenuDetail>(CONTEXT_MENU_EVENT, {
+      bubbles: true,
+      composed: true,
+      detail: { anchor: { x: 50, y: 80 }, entries: [{ id: 'open', label: 'Open' }] }
+    })
+  )
+  return desktop.shadowRoot?.querySelector<ContextMenuLayer>('sc-context-menu')
+}
+
+it('closes the layer when the window manager notifies a change', () => {
+  const desktop = mount()
+  const layer = openMenuLayer(desktop)
+  expect(layer?.isOpen).toBe(true)
+  activate(desktop, 'resume')
+  expect(layer?.isOpen).toBe(false)
+})
+
+it('closes the layer when a window it describes is closed', () => {
+  const desktop = mount()
+  const layer = openMenuLayer(desktop)
+  expect(layer?.isOpen).toBe(true)
+  desktop.shadowRoot?.querySelector('sc-window')?.shadowRoot?.querySelector<HTMLButtonElement>('#close')?.click()
+  expect(layer?.isOpen).toBe(false)
+})
+
+it('suppresses the native context menu everywhere', () => {
+  mount()
+  const event = new MouseEvent('contextmenu', { bubbles: true, composed: true, cancelable: true })
+  document.body.dispatchEvent(event)
+  expect(event.defaultPrevented).toBe(true)
+})
+
+it('synthesises a contextmenu event on the focused element for Shift+F10', () => {
+  const desktop = mount()
+  const probe = document.createElement('button')
+  document.body.append(probe)
+  probe.focus()
+  let anchored = false
+  probe.addEventListener(
+    'contextmenu',
+    () => {
+      anchored = true
+    },
+    { once: true }
+  )
+  window.dispatchEvent(new KeyboardEvent('keydown', { key: 'F10', shiftKey: true, bubbles: true }))
+  expect(anchored).toBe(true)
+  probe.remove()
+  expect(desktop.isConnected).toBe(true)
+})
+
+it('synthesises a contextmenu event on the focused element for the ContextMenu key', () => {
+  const desktop = mount()
+  const probe = document.createElement('button')
+  document.body.append(probe)
+  probe.focus()
+  let anchored = false
+  probe.addEventListener(
+    'contextmenu',
+    () => {
+      anchored = true
+    },
+    { once: true }
+  )
+  window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ContextMenu', bubbles: true }))
+  expect(anchored).toBe(true)
+  probe.remove()
+  expect(desktop.isConnected).toBe(true)
 })

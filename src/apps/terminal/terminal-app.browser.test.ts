@@ -1,5 +1,6 @@
 import { expect, it } from 'vitest'
 import '../../theme/tokens.css'
+import { CONTEXT_MENU_EVENT, type ContextMenuDetail } from '../../desktop/context-menu/context-menu-request'
 import './terminal-app'
 
 const mountTerminal = () => {
@@ -141,5 +142,71 @@ it('dispatches an app-activate request when a command opens an app', () => {
   run(app, 'resume')
   expect(events).toHaveLength(1)
   expect(events[0]?.detail.appId).toBe('resume')
+  cleanup()
+})
+
+it('offers the shared content actions plus the terminal ones', () => {
+  const app = mountTerminal()
+  let detail: ContextMenuDetail | undefined
+  document.addEventListener(
+    CONTEXT_MENU_EVENT,
+    (event) => {
+      detail = (event as CustomEvent<ContextMenuDetail>).detail
+    },
+    { once: true }
+  )
+  app.dispatchEvent(
+    new MouseEvent('contextmenu', { bubbles: true, composed: true, cancelable: true, clientX: 12, clientY: 34 })
+  )
+  expect(detail?.anchor).toEqual({ x: 12, y: 34 })
+  expect(detail?.entries.map((entry) => ('label' in entry ? entry.label : '---'))).toEqual([
+    'Copy',
+    'Paste',
+    '---',
+    'Select All',
+    'Clear'
+  ])
+  cleanup()
+})
+
+it('clears the scrollback from the menu', () => {
+  const app = mountTerminal()
+  let detail: ContextMenuDetail | undefined
+  document.addEventListener(
+    CONTEXT_MENU_EVENT,
+    (event) => {
+      detail = (event as CustomEvent<ContextMenuDetail>).detail
+    },
+    { once: true }
+  )
+  app.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, composed: true, cancelable: true }))
+  const clear = detail?.entries.find((entry) => 'id' in entry && entry.id === 'clear')
+  expect(app.shadowRoot?.querySelector('#scrollback')?.childElementCount).toBeGreaterThan(0)
+  if (clear && 'perform' in clear) {
+    clear.perform?.()
+  }
+  expect(app.shadowRoot?.querySelector('#scrollback')?.childElementCount).toBe(0)
+  cleanup()
+})
+
+it('detects a link right-clicked inside the shadow scrollback', () => {
+  const app = mountTerminal()
+  const anchor = document.createElement('a')
+  anchor.href = 'https://example.test/repo'
+  app.shadowRoot?.querySelector('#scrollback')?.append(anchor)
+  let detail: ContextMenuDetail | undefined
+  document.addEventListener(
+    CONTEXT_MENU_EVENT,
+    (event) => {
+      detail = (event as CustomEvent<ContextMenuDetail>).detail
+    },
+    { once: true }
+  )
+  anchor.dispatchEvent(
+    new MouseEvent('contextmenu', { bubbles: true, composed: true, cancelable: true, clientX: 5, clientY: 6 })
+  )
+  expect(detail?.entries.filter((entry) => 'id' in entry).map((entry) => ('id' in entry ? entry.id : ''))).toEqual(
+    expect.arrayContaining(['open-link', 'copy-link'])
+  )
   cleanup()
 })

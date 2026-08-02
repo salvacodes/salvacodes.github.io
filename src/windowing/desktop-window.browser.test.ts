@@ -1,4 +1,7 @@
-import { afterEach, expect, it } from 'vitest'
+import { afterEach, expect, it, vi } from 'vitest'
+import type { MenuAction } from '../desktop/context-menu/context-menu-model'
+import { CONTEXT_MENU_EVENT, type ContextMenuDetail } from '../desktop/context-menu/context-menu-request'
+import { LONG_PRESS_DURATION_MS } from '../desktop/context-menu/long-press'
 import './desktop-window'
 import type { DesktopWindow } from './desktop-window'
 import { WindowManager } from './window-manager'
@@ -189,4 +192,122 @@ it('a dblclick bubbling up from a control button does not toggle maximize', () =
   const maximizeButton = element.shadowRoot!.querySelector('#maximize')!
   maximizeButton.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))
   expect(manager.list()[0]!.isMaximized).toBe(false)
+})
+
+it('ignores a secondary-button press on the title bar', () => {
+  const { manager, element } = mount()
+  const before = manager.list()[0]!.geometry
+  const titleBar = element.shadowRoot!.querySelector('#title-bar')!
+  titleBar.dispatchEvent(
+    new PointerEvent('pointerdown', { bubbles: true, button: 2, clientX: 400, clientY: 200, pointerId: 1 })
+  )
+  titleBar.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, clientX: 460, clientY: 250, pointerId: 1 }))
+  expect(manager.list()[0]!.geometry).toEqual(before)
+})
+
+it('ignores a secondary-button press on a resize handle', () => {
+  const { manager, element } = mount()
+  const before = manager.list()[0]!.geometry
+  const handle = element.shadowRoot!.querySelector('[data-direction="se"]')!
+  handle.dispatchEvent(
+    new PointerEvent('pointerdown', { bubbles: true, button: 2, clientX: 800, clientY: 700, pointerId: 1 })
+  )
+  handle.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, clientX: 880, clientY: 760, pointerId: 1 }))
+  expect(manager.list()[0]!.geometry).toEqual(before)
+})
+
+const openTitleBarMenu = (element: DesktopWindow): ContextMenuDetail => {
+  let detail: ContextMenuDetail | undefined
+  document.addEventListener(
+    CONTEXT_MENU_EVENT,
+    (event) => {
+      detail = (event as CustomEvent<ContextMenuDetail>).detail
+    },
+    { once: true }
+  )
+  element.shadowRoot
+    ?.querySelector('#title-bar')
+    ?.dispatchEvent(
+      new MouseEvent('contextmenu', { bubbles: true, composed: true, cancelable: true, clientX: 10, clientY: 20 })
+    )
+  if (!detail) {
+    throw new Error('title bar dispatched no context menu request')
+  }
+  return detail
+}
+
+const actionById = (detail: ContextMenuDetail, id: string): MenuAction =>
+  detail.entries.find((entry) => 'id' in entry && entry.id === id) as MenuAction
+
+it('offers the window actions on the title bar', () => {
+  const { element } = mount()
+  const labels = openTitleBarMenu(element).entries.map((entry) => ('label' in entry ? entry.label : '---'))
+  expect(labels).toEqual(['Minimize', 'Maximize', '---', 'Always on Top', 'Move', 'Resize', '---', 'Close'])
+})
+
+it('greys out the window actions that have no implementation yet', () => {
+  const { element } = mount()
+  const disabledIds = openTitleBarMenu(element)
+    .entries.filter((entry): entry is MenuAction => 'disabled' in entry && entry.disabled === true)
+    .map((entry) => entry.id)
+  expect(disabledIds).toEqual(['always-on-top', 'move', 'resize'])
+})
+
+it('labels the maximize entry Restore when the window is maximized', () => {
+  const { element, manager, id } = mount()
+  manager.maximize(id)
+  expect(actionById(openTitleBarMenu(element), 'maximize').label).toBe('Restore')
+})
+
+it('minimizes through the menu', () => {
+  const { element, manager, id } = mount()
+  actionById(openTitleBarMenu(element), 'minimize').perform?.()
+  expect(manager.list().find((window) => window.id === id)?.isMinimized).toBe(true)
+})
+
+it('closes through the menu', () => {
+  const { element, manager } = mount()
+  actionById(openTitleBarMenu(element), 'close').perform?.()
+  expect(manager.list()).toHaveLength(0)
+})
+
+it('does not claim right-clicks on window content', () => {
+  const { element } = mount()
+  let requested = false
+  document.addEventListener(
+    CONTEXT_MENU_EVENT,
+    () => {
+      requested = true
+    },
+    { once: true }
+  )
+  element.shadowRoot
+    ?.querySelector('#content')
+    ?.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, composed: true, cancelable: true }))
+  expect(requested).toBe(false)
+})
+
+it('re-arms the long-press menu after a disconnect and reconnect', () => {
+  vi.useFakeTimers()
+  try {
+    const { element } = mount()
+    element.remove()
+    document.body.append(element)
+    let detail: ContextMenuDetail | undefined
+    document.addEventListener(
+      CONTEXT_MENU_EVENT,
+      (event) => {
+        detail = (event as CustomEvent<ContextMenuDetail>).detail
+      },
+      { once: true }
+    )
+    const titleBar = element.shadowRoot?.querySelector('#title-bar')
+    titleBar?.dispatchEvent(
+      new PointerEvent('pointerdown', { pointerType: 'touch', clientX: 10, clientY: 20, bubbles: true, pointerId: 1 })
+    )
+    vi.advanceTimersByTime(LONG_PRESS_DURATION_MS)
+    expect(detail).toBeDefined()
+  } finally {
+    vi.useRealTimers()
+  }
 })

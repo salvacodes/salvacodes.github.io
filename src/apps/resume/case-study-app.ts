@@ -1,3 +1,7 @@
+import { readSelection, standardContentItems } from '../../desktop/context-menu/content-items'
+import type { Point } from '../../desktop/context-menu/context-menu-model'
+import { requestContextMenu } from '../../desktop/context-menu/context-menu-request'
+import { observeLongPress } from '../../desktop/context-menu/long-press'
 import styles from './case-study-app.css?inline'
 import { textElement } from './dom'
 import { resumeContent } from './resume-content'
@@ -42,8 +46,21 @@ export class CaseStudyApp extends HTMLElement {
     if (!this.shadowRoot) {
       const root = this.attachShadow({ mode: 'open' })
       root.adoptedStyleSheets = [sheet]
+      this.addEventListener('contextmenu', (event) => {
+        event.preventDefault()
+        this.#requestMenu({ x: event.clientX, y: event.clientY }, event.composedPath()[0] as Element | null)
+      })
+      observeLongPress(this, (point) => this.#requestMenu(point, null))
     }
     this.#render()
+  }
+
+  #requestMenu(anchor: Point, target: Element | null): void {
+    const root = this.shadowRoot
+    if (!root) {
+      return
+    }
+    requestContextMenu(this, { anchor, entries: standardContentItems(target, readSelection(root)) })
   }
 
   attributeChangedCallback(): void {

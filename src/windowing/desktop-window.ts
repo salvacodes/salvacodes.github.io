@@ -1,3 +1,6 @@
+import type { MenuEntry, Point } from '../desktop/context-menu/context-menu-model'
+import { requestContextMenu } from '../desktop/context-menu/context-menu-request'
+import { observeLongPress } from '../desktop/context-menu/long-press'
 import styles from './desktop-window.css?inline'
 import type { ManagedWindow, WindowManager } from './window-manager'
 
@@ -5,6 +8,10 @@ const sheet = new CSSStyleSheet()
 sheet.replaceSync(styles)
 
 const RESIZE_DIRECTIONS = ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw'] as const
+
+const PRIMARY_BUTTON = 0
+
+const isPrimaryButtonPress = (event: PointerEvent): boolean => event.button === PRIMARY_BUTTON
 
 interface GestureStart {
   pointerX: number
@@ -16,6 +23,7 @@ export class DesktopWindow extends HTMLElement {
   manager!: WindowManager
   windowId!: string
   #unsubscribe?: () => void
+  #stopObservingLongPress?: () => void
 
   connectedCallback(): void {
     if (!this.shadowRoot) {
@@ -41,6 +49,10 @@ export class DesktopWindow extends HTMLElement {
       this.#wireControls(root)
     }
     this.#unsubscribe = this.manager.subscribe(() => this.#render())
+    const titleBar = this.shadowRoot?.querySelector<HTMLElement>('#title-bar')
+    if (titleBar) {
+      this.#stopObservingLongPress = observeLongPress(titleBar, (point) => this.#requestMenu(point))
+    }
     this.#render()
     if (this.#currentState()?.isFocused) {
       this.focus()
@@ -49,6 +61,7 @@ export class DesktopWindow extends HTMLElement {
 
   disconnectedCallback(): void {
     this.#unsubscribe?.()
+    this.#stopObservingLongPress?.()
   }
 
   #currentState(): ManagedWindow | undefined {
@@ -88,6 +101,9 @@ export class DesktopWindow extends HTMLElement {
       this.#toggleMaximize()
     })
     titleBar?.addEventListener('pointerdown', (event) => {
+      if (!isPrimaryButtonPress(event)) {
+        return
+      }
       if (this.#isControlButtonTarget(event)) {
         return
       }
@@ -102,8 +118,15 @@ export class DesktopWindow extends HTMLElement {
         height: start.geometry.height
       }))
     })
+    titleBar?.addEventListener('contextmenu', (event) => {
+      event.preventDefault()
+      this.#requestMenu({ x: event.clientX, y: event.clientY })
+    })
     for (const handle of root.querySelectorAll<HTMLElement>('.resize-handle')) {
       handle.addEventListener('pointerdown', (event) => {
+        if (!isPrimaryButtonPress(event)) {
+          return
+        }
         const direction = handle.dataset.direction ?? ''
         this.#beginGesture(event, (start, dx, dy) => this.#resizedGeometry(start, direction, dx, dy))
       })
@@ -124,6 +147,31 @@ export class DesktopWindow extends HTMLElement {
     } else {
       this.manager.maximize(this.windowId)
     }
+  }
+
+  #requestMenu(anchor: Point): void {
+    const state = this.#currentState()
+    if (!state) {
+      return
+    }
+    requestContextMenu(this, { anchor, entries: this.#entries(state.isMaximized) })
+  }
+
+  #entries(isMaximized: boolean): MenuEntry[] {
+    return [
+      { id: 'minimize', label: 'Minimize', perform: () => this.manager.minimize(this.windowId) },
+      {
+        id: 'maximize',
+        label: isMaximized ? 'Restore' : 'Maximize',
+        perform: () => this.#toggleMaximize()
+      },
+      { separator: true },
+      { id: 'always-on-top', label: 'Always on Top', disabled: true },
+      { id: 'move', label: 'Move', disabled: true },
+      { id: 'resize', label: 'Resize', disabled: true },
+      { separator: true },
+      { id: 'close', label: 'Close', perform: () => this.manager.close(this.windowId) }
+    ]
   }
 
   #gestureBlocked(): boolean {

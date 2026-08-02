@@ -1,11 +1,14 @@
 import { afterEach, expect, it } from 'vitest'
 import { createAppRegistry } from '../apps'
+import { WindowManager } from '../windowing/window-manager'
 import './activities-overview'
 import type { ActivitiesOverview } from './activities-overview'
+import { CONTEXT_MENU_EVENT, type ContextMenuDetail } from './context-menu/context-menu-request'
 
 const mount = () => {
   const overview = document.createElement('sc-overview') as ActivitiesOverview
   overview.registry = createAppRegistry()
+  overview.manager = new WindowManager({ width: 1280, height: 800 })
   document.body.append(overview)
   return overview
 }
@@ -53,4 +56,31 @@ it('escape closes the overview', () => {
   overview.open = true
   window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
   expect(overview.open).toBe(false)
+})
+
+it('requests an app menu when a grid entry is right-clicked', () => {
+  const overview = mount()
+  overview.open = true
+  let detail: ContextMenuDetail | undefined
+  document.addEventListener(
+    CONTEXT_MENU_EVENT,
+    (event) => {
+      detail = (event as CustomEvent<ContextMenuDetail>).detail
+    },
+    { once: true }
+  )
+  overview.shadowRoot
+    ?.querySelector('[data-app-id="terminal"]')
+    ?.dispatchEvent(
+      new MouseEvent('contextmenu', { bubbles: true, composed: true, cancelable: true, clientX: 15, clientY: 25 })
+    )
+  expect(detail?.anchor).toEqual({ x: 15, y: 25 })
+  expect(detail?.entries.map((entry) => ('label' in entry ? entry.label : '---'))).toEqual([
+    'Open',
+    'New Window',
+    'Show All Windows',
+    'Pin to Dash',
+    '---',
+    'Quit'
+  ])
 })

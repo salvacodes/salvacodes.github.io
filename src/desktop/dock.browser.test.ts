@@ -1,6 +1,7 @@
 import { afterEach, expect, it } from 'vitest'
 import { createAppRegistry } from '../apps'
 import { WindowManager } from '../windowing/window-manager'
+import { CONTEXT_MENU_EVENT, type ContextMenuDetail } from './context-menu/context-menu-request'
 import './dock'
 import type { Dock } from './dock'
 
@@ -49,4 +50,30 @@ it('dispatches app-activate on click', () => {
   )
   dock.shadowRoot?.querySelector<HTMLButtonElement>('[data-app-id="terminal"]')?.click()
   expect(detail).toEqual({ appId: 'terminal' })
+})
+
+it('requests an app menu when a launcher is right-clicked', () => {
+  const { dock } = mount()
+  let detail: ContextMenuDetail | undefined
+  document.addEventListener(
+    CONTEXT_MENU_EVENT,
+    (event) => {
+      detail = (event as CustomEvent<ContextMenuDetail>).detail
+    },
+    { once: true }
+  )
+  dock.shadowRoot
+    ?.querySelector('[data-app-id="terminal"]')
+    ?.dispatchEvent(
+      new MouseEvent('contextmenu', { bubbles: true, composed: true, cancelable: true, clientX: 15, clientY: 25 })
+    )
+  expect(detail?.anchor).toEqual({ x: 15, y: 25 })
+  expect(detail?.entries.map((entry) => ('label' in entry ? entry.label : '---'))).toEqual([
+    'Open',
+    'New Window',
+    'Show All Windows',
+    'Pin to Dash',
+    '---',
+    'Quit'
+  ])
 })

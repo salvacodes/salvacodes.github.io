@@ -1,6 +1,10 @@
 import { APP_ACTIVATE_EVENT, type AppActivateDetail } from '../apps/app-activation'
 import type { AppRegistry } from '../apps/app-registry'
 import type { WindowManager } from '../windowing/window-manager'
+import { appIconMenuEntries } from './context-menu/app-icon-menu'
+import type { Point } from './context-menu/context-menu-model'
+import { requestContextMenu } from './context-menu/context-menu-request'
+import { observeLongPress } from './context-menu/long-press'
 import styles from './dock.css?inline'
 
 const sheet = new CSSStyleSheet()
@@ -23,14 +27,19 @@ export class Dock extends HTMLElement {
         button.title = app.name
         button.textContent = app.iconGlyph
         button.addEventListener('click', () => {
-          this.dispatchEvent(
-            new CustomEvent<AppActivateDetail>(APP_ACTIVATE_EVENT, {
-              bubbles: true,
-              composed: true,
-              detail: { appId: app.id }
-            })
-          )
+          this.#activate(app.id)
         })
+        const requestMenu = (anchor: Point): void => {
+          requestContextMenu(button, {
+            anchor,
+            entries: appIconMenuEntries(app, this.manager, () => this.#activate(app.id))
+          })
+        }
+        button.addEventListener('contextmenu', (event) => {
+          event.preventDefault()
+          requestMenu({ x: event.clientX, y: event.clientY })
+        })
+        observeLongPress(button, requestMenu)
         nav.append(button)
       }
       root.append(nav)
@@ -41,6 +50,12 @@ export class Dock extends HTMLElement {
 
   disconnectedCallback(): void {
     this.#unsubscribe?.()
+  }
+
+  #activate(appId: string): void {
+    this.dispatchEvent(
+      new CustomEvent<AppActivateDetail>(APP_ACTIVATE_EVENT, { bubbles: true, composed: true, detail: { appId } })
+    )
   }
 
   #renderRunningState(): void {

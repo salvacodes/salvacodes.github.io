@@ -1,3 +1,7 @@
+import { readSelection, standardContentItems } from '../../desktop/context-menu/content-items'
+import type { MenuEntry, Point } from '../../desktop/context-menu/context-menu-model'
+import { requestContextMenu } from '../../desktop/context-menu/context-menu-request'
+import { observeLongPress } from '../../desktop/context-menu/long-press'
 import { APP_ACTIVATE_EVENT, type AppActivateDetail } from '../app-activation'
 import styles from './terminal-app.css?inline'
 import { TerminalShell } from './terminal-shell'
@@ -46,6 +50,11 @@ export class TerminalApp extends HTMLElement {
       this.#execute(bootCommand)
     }
     this.#input.focus()
+    this.addEventListener('contextmenu', (event) => {
+      event.preventDefault()
+      this.#requestMenu({ x: event.clientX, y: event.clientY }, event.composedPath()[0] as Element | null)
+    })
+    observeLongPress(this, (point) => this.#requestMenu(point, null))
   }
 
   #onKeydown(event: KeyboardEvent): void {
@@ -114,6 +123,28 @@ export class TerminalApp extends HTMLElement {
     outputLine.className = 'output'
     outputLine.textContent = text
     this.#scrollback.append(outputLine)
+  }
+
+  #requestMenu(anchor: Point, target: Element | null): void {
+    const root = this.shadowRoot
+    if (!root) {
+      return
+    }
+    const entries: MenuEntry[] = [
+      ...standardContentItems(target, readSelection(root)),
+      { separator: true },
+      { id: 'select-all', label: 'Select All', perform: () => this.#selectScrollback() },
+      { id: 'clear', label: 'Clear', perform: () => this.#scrollback.replaceChildren() }
+    ]
+    requestContextMenu(this, { anchor, entries })
+  }
+
+  #selectScrollback(): void {
+    const range = document.createRange()
+    range.selectNodeContents(this.#scrollback)
+    const selection = document.getSelection()
+    selection?.removeAllRanges()
+    selection?.addRange(range)
   }
 }
 

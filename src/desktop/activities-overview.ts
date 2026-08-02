@@ -1,12 +1,18 @@
 import { APP_ACTIVATE_EVENT, type AppActivateDetail } from '../apps/app-activation'
 import type { AppRegistry } from '../apps/app-registry'
+import type { WindowManager } from '../windowing/window-manager'
 import styles from './activities-overview.css?inline'
+import { appIconMenuEntries } from './context-menu/app-icon-menu'
+import type { Point } from './context-menu/context-menu-model'
+import { requestContextMenu } from './context-menu/context-menu-request'
+import { observeLongPress } from './context-menu/long-press'
 
 const sheet = new CSSStyleSheet()
 sheet.replaceSync(styles)
 
 export class ActivitiesOverview extends HTMLElement {
   registry!: AppRegistry
+  manager!: WindowManager
   #escapeListener = (event: KeyboardEvent): void => {
     if (event.key === 'Escape') {
       this.open = false
@@ -50,15 +56,19 @@ export class ActivitiesOverview extends HTMLElement {
       name.textContent = app.name
       button.append(glyph, name)
       button.addEventListener('click', () => {
-        this.dispatchEvent(
-          new CustomEvent<AppActivateDetail>(APP_ACTIVATE_EVENT, {
-            bubbles: true,
-            composed: true,
-            detail: { appId: app.id }
-          })
-        )
-        this.open = false
+        this.#activate(app.id)
       })
+      const requestMenu = (anchor: Point): void => {
+        requestContextMenu(button, {
+          anchor,
+          entries: appIconMenuEntries(app, this.manager, () => this.#activate(app.id))
+        })
+      }
+      button.addEventListener('contextmenu', (event) => {
+        event.preventDefault()
+        requestMenu({ x: event.clientX, y: event.clientY })
+      })
+      observeLongPress(button, requestMenu)
       grid.append(button)
     }
     root.append(backdrop, grid)
@@ -66,6 +76,13 @@ export class ActivitiesOverview extends HTMLElement {
 
   disconnectedCallback(): void {
     window.removeEventListener('keydown', this.#escapeListener)
+  }
+
+  #activate(appId: string): void {
+    this.dispatchEvent(
+      new CustomEvent<AppActivateDetail>(APP_ACTIVATE_EVENT, { bubbles: true, composed: true, detail: { appId } })
+    )
+    this.open = false
   }
 }
 

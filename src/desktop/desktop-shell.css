@@ -8,4 +8,9 @@
 #windows {
   position: absolute;
   inset: 0;
+  pointer-events: none;
+}
+
+#windows > * {
+  pointer-events: auto;
 }

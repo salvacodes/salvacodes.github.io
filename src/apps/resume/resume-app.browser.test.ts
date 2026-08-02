@@ -1,4 +1,6 @@
 import { afterEach, expect, it } from 'vitest'
+import { CONTEXT_MENU_EVENT, type ContextMenuDetail } from '../../desktop/context-menu/context-menu-request'
+import { PRINT_DOCUMENT_EVENT } from '../../desktop/print-surface'
 import '../../theme/tokens.css'
 import './resume-app'
 import type { ResumeApp } from './resume-app'
@@ -108,4 +110,72 @@ it('offers a print action that emits a printable document', () => {
   const host = document.createElement('div')
   host.append(events[0]!.detail.fragment)
   expect(host.querySelector('.print-footer')).not.toBeNull()
+})
+
+it('offers the shared content actions plus printing', () => {
+  const app = mount()
+  let detail: ContextMenuDetail | undefined
+  document.addEventListener(
+    CONTEXT_MENU_EVENT,
+    (event) => {
+      detail = (event as CustomEvent<ContextMenuDetail>).detail
+    },
+    { once: true }
+  )
+  app.dispatchEvent(
+    new MouseEvent('contextmenu', { bubbles: true, composed: true, cancelable: true, clientX: 60, clientY: 70 })
+  )
+  expect(detail?.anchor).toEqual({ x: 60, y: 70 })
+  expect(detail?.entries.map((entry) => ('label' in entry ? entry.label : '---'))).toEqual([
+    'Copy',
+    'Paste',
+    '---',
+    'Print Resume…'
+  ])
+})
+
+it('prints through the menu using the existing print path', () => {
+  const app = mount()
+  let menuDetail: ContextMenuDetail | undefined
+  document.addEventListener(
+    CONTEXT_MENU_EVENT,
+    (event) => {
+      menuDetail = (event as CustomEvent<ContextMenuDetail>).detail
+    },
+    { once: true }
+  )
+  app.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, composed: true, cancelable: true }))
+  let printed = false
+  document.addEventListener(
+    PRINT_DOCUMENT_EVENT,
+    () => {
+      printed = true
+    },
+    { once: true }
+  )
+  const print = menuDetail?.entries.find((entry) => 'id' in entry && entry.id === 'print')
+  if (print && 'perform' in print) {
+    print.perform?.()
+  }
+  expect(printed).toBe(true)
+})
+
+it('detects the repo link right-clicked inside the site section', () => {
+  const app = mount()
+  selectSection(app, 'site')
+  const anchor = shadow(app).querySelector<HTMLAnchorElement>('.repo-link')!
+  let detail: ContextMenuDetail | undefined
+  document.addEventListener(
+    CONTEXT_MENU_EVENT,
+    (event) => {
+      detail = (event as CustomEvent<ContextMenuDetail>).detail
+    },
+    { once: true }
+  )
+  anchor.dispatchEvent(
+    new MouseEvent('contextmenu', { bubbles: true, composed: true, cancelable: true, clientX: 5, clientY: 6 })
+  )
+  expect(detail?.entries.filter((entry) => 'id' in entry).map((entry) => ('id' in entry ? entry.id : ''))).toEqual(
+    expect.arrayContaining(['open-link', 'copy-link'])
+  )
 })

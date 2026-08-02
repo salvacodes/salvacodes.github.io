@@ -1,5 +1,7 @@
-import { afterEach, expect, it } from 'vitest'
+import { afterEach, expect, it, vi } from 'vitest'
 import '../../theme/tokens.css'
+import { CONTEXT_MENU_EVENT, type ContextMenuDetail } from '../../desktop/context-menu/context-menu-request'
+import { LONG_PRESS_DURATION_MS } from '../../desktop/context-menu/long-press'
 import './case-study-app'
 import { resumeContent } from './resume-content'
 
@@ -62,4 +64,63 @@ it('shows a not-found state for an unknown study instead of throwing', () => {
 it('shows a not-found state when no study is requested', () => {
   const app = mount()
   expect(app.shadowRoot?.querySelector('.not-found')).not.toBeNull()
+})
+
+const captureMenuRequest = (): (() => ContextMenuDetail | undefined) => {
+  let detail: ContextMenuDetail | undefined
+  document.addEventListener(
+    CONTEXT_MENU_EVENT,
+    (event) => {
+      detail = (event as CustomEvent<ContextMenuDetail>).detail
+    },
+    { once: true }
+  )
+  return () => detail
+}
+
+const entryIds = (detail: ContextMenuDetail | undefined): string[] =>
+  (detail?.entries ?? []).filter((entry) => 'id' in entry).map((entry) => ('id' in entry ? entry.id : ''))
+
+it('offers the shared content actions on right-click instead of the native menu', () => {
+  const study = resumeContent.caseStudies[0]!
+  const app = mount(study.id)
+  const requested = captureMenuRequest()
+  const event = new MouseEvent('contextmenu', {
+    bubbles: true,
+    composed: true,
+    cancelable: true,
+    clientX: 12,
+    clientY: 34
+  })
+  app.dispatchEvent(event)
+  expect(event.defaultPrevented).toBe(true)
+  expect(requested()?.anchor).toEqual({ x: 12, y: 34 })
+  expect(entryIds(requested())).toEqual(['copy', 'paste'])
+})
+
+it('detects a link right-clicked inside its shadow content', () => {
+  const study = resumeContent.caseStudies[0]!
+  const app = mount(study.id)
+  const anchor = document.createElement('a')
+  anchor.href = 'https://example.test/case'
+  app.shadowRoot?.append(anchor)
+  const requested = captureMenuRequest()
+  anchor.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, composed: true, cancelable: true }))
+  expect(entryIds(requested())).toEqual(['copy', 'open-link', 'copy-link', 'paste'])
+})
+
+it('opens the same menu on a long press', () => {
+  vi.useFakeTimers()
+  try {
+    const study = resumeContent.caseStudies[0]!
+    const app = mount(study.id)
+    const requested = captureMenuRequest()
+    app.dispatchEvent(
+      new PointerEvent('pointerdown', { pointerType: 'touch', clientX: 10, clientY: 20, bubbles: true, pointerId: 1 })
+    )
+    vi.advanceTimersByTime(LONG_PRESS_DURATION_MS)
+    expect(entryIds(requested())).toEqual(['copy', 'paste'])
+  } finally {
+    vi.useRealTimers()
+  }
 })
