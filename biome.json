@@ -1,12 +1,9 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.3.14/schema.json",
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
   "vcs": {
     "enabled": true,
     "clientKind": "git",
     "useIgnoreFile": true
-  },
-  "files": {
-    "includes": ["**", "!!**/dist", "!!**/node_modules"]
   },
   "formatter": {
     "enabled": true,
@@ -14,26 +11,26 @@
     "indentWidth": 2,
     "lineWidth": 120
   },
-  "linter": {
-    "enabled": true,
-    "rules": {
-      "recommended": true
-    }
-  },
   "javascript": {
     "formatter": {
       "quoteStyle": "single",
-      "semicolons": "asNeeded",
-      "trailingCommas": "none"
+      "trailingCommas": "none",
+      "semicolons": "asNeeded"
     }
   },
-  "css": {
-    "parser": {
-      "tailwindDirectives": true
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended",
+      "correctness": {
+        "noUndeclaredVariables": "error"
+      },
+      "suspicious": {
+        "noConsole": "error"
+      }
     }
   },
   "assist": {
-    "enabled": true,
     "actions": {
       "source": {
         "organizeImports": "on"
@@ -42,12 +39,11 @@
   },
   "overrides": [
     {
-      "includes": ["**/*.{astro,vue}"],
+      "includes": ["**/*.test.ts", "test/e2e/**"],
       "linter": {
         "rules": {
-          "correctness": {
-            "noUnusedVariables": "off",
-            "noUnusedImports": "off"
+          "style": {
+            "noNonNullAssertion": "off"
           }
         }
       }

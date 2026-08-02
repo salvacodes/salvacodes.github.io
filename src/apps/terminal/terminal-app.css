@@ -1,0 +1,41 @@
+:host {
+  display: block;
+  height: 100%;
+  overflow: auto;
+  background: var(--color-terminal-bg);
+  color: var(--color-terminal-text);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  line-height: 1.3;
+}
+
+.terminal {
+  padding: 8px 10px;
+}
+
+.prompt {
+  color: var(--color-terminal-green);
+}
+
+.output {
+  color: var(--color-terminal-dim);
+  white-space: pre-wrap;
+}
+
+#input-line {
+  display: flex;
+  gap: 0.5ch;
+}
+
+#command-input {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--color-terminal-text);
+  font: inherit;
+  caret-color: var(--color-terminal-green);
+}

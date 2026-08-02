@@ -1,0 +1,60 @@
+:host {
+  display: none;
+}
+
+:host([open]) {
+  display: block;
+  position: absolute;
+  inset: var(--top-bar-height) 0 0 0;
+  z-index: 20000;
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  border: none;
+  padding: 0;
+  background: rgb(5 7 10 / 0.7);
+}
+
+.grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, 96px);
+  justify-content: center;
+  align-content: center;
+  gap: 24px;
+  height: 100%;
+  pointer-events: none;
+}
+
+.grid button {
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  border: none;
+  padding: 12px;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.grid button:hover {
+  background: rgb(54 123 240 / 0.2);
+}
+
+.glyph {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: var(--color-surface-raised);
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: 1.2rem;
+}

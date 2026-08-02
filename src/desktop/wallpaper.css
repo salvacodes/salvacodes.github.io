@@ -1,0 +1,51 @@
+:host {
+  position: absolute;
+  inset: 0;
+  display: block;
+  overflow: hidden;
+  background: var(--color-bg);
+}
+
+.gradient {
+  position: absolute;
+  inset: -20%;
+  background:
+    radial-gradient(ellipse at 30% 70%, #14202e 0%, transparent 55%),
+    radial-gradient(ellipse at 75% 25%, #101a26 0%, transparent 50%), linear-gradient(160deg, #0c0f14 0%, #0e1420 100%);
+  animation: drift 90s ease-in-out infinite alternate;
+}
+
+.motif {
+  position: absolute;
+  right: 6%;
+  bottom: 8%;
+  width: min(38vw, 520px);
+  height: auto;
+  opacity: 0.4;
+  animation: pulse 45s ease-in-out infinite alternate;
+}
+
+@keyframes drift {
+  from {
+    transform: translate(0, 0);
+  }
+  to {
+    transform: translate(2%, -2%);
+  }
+}
+
+@keyframes pulse {
+  from {
+    opacity: 0.35;
+  }
+  to {
+    opacity: 0.5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gradient,
+  .motif {
+    animation: none;
+  }
+}

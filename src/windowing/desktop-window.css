@@ -1,0 +1,153 @@
+:host {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--color-border);
+  border-radius: 8px 8px 4px 4px;
+  background: var(--color-surface);
+  box-shadow: 0 12px 40px rgb(0 0 0 / 0.55);
+  box-sizing: border-box;
+  overflow: hidden;
+  outline: none;
+}
+
+:host([hidden]) {
+  display: none;
+}
+
+:host([maximized]) {
+  border-radius: 0;
+}
+
+section[role="dialog"] {
+  display: contents;
+}
+
+#title-bar {
+  display: flex;
+  align-items: center;
+  height: var(--title-bar-height);
+  padding: 0 8px 0 16px;
+  background: var(--color-surface-raised);
+  user-select: none;
+  touch-action: none;
+}
+
+:host(:not([focused])) #title-bar {
+  background: var(--color-surface);
+  color: var(--color-text-dim);
+}
+
+#title {
+  flex: 1;
+  margin: 0;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#controls {
+  display: flex;
+  gap: 8px;
+}
+
+#controls button {
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 50%;
+  background: var(--color-border);
+  color: var(--color-text);
+  font-size: 0.7rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+#controls button:hover {
+  background: var(--color-accent-soft);
+}
+
+#close:hover {
+  background: #e0443e;
+}
+
+#content {
+  flex: 1;
+  overflow: hidden;
+}
+
+.resize-handle {
+  position: absolute;
+}
+
+.resize-handle[data-direction="n"] {
+  top: -4px;
+  left: 8px;
+  right: 8px;
+  height: 8px;
+  cursor: ns-resize;
+}
+.resize-handle[data-direction="s"] {
+  bottom: -4px;
+  left: 8px;
+  right: 8px;
+  height: 8px;
+  cursor: ns-resize;
+}
+.resize-handle[data-direction="e"] {
+  right: -4px;
+  top: 8px;
+  bottom: 8px;
+  width: 8px;
+  cursor: ew-resize;
+}
+.resize-handle[data-direction="w"] {
+  left: -4px;
+  top: 8px;
+  bottom: 8px;
+  width: 8px;
+  cursor: ew-resize;
+}
+.resize-handle[data-direction="ne"] {
+  top: -4px;
+  right: -4px;
+  width: 12px;
+  height: 12px;
+  cursor: nesw-resize;
+}
+.resize-handle[data-direction="sw"] {
+  bottom: -4px;
+  left: -4px;
+  width: 12px;
+  height: 12px;
+  cursor: nesw-resize;
+}
+.resize-handle[data-direction="nw"] {
+  top: -4px;
+  left: -4px;
+  width: 12px;
+  height: 12px;
+  cursor: nwse-resize;
+}
+.resize-handle[data-direction="se"] {
+  bottom: -4px;
+  right: -4px;
+  width: 12px;
+  height: 12px;
+  cursor: nwse-resize;
+}
+
+:host([maximized]) .resize-handle,
+:host([compact]) .resize-handle {
+  display: none;
+}
+
+:host([compact]) #minimize,
+:host([compact]) #maximize {
+  display: none;
+}
