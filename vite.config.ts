@@ -26,12 +26,12 @@ const injectMetaCsp = (): Plugin => ({
 export default defineConfig({
   plugins: [injectMetaCsp()],
   test: {
-    attachmentsDir: 'test-results/.vitest-attachments',
     projects: [
       {
         test: {
           name: 'unit',
           environment: 'node',
+          attachmentsDir: 'test-results/unit/vitest-attachments',
           include: ['src/**/*.test.ts'],
           exclude: ['src/**/*.browser.test.ts']
         }
@@ -39,6 +39,7 @@ export default defineConfig({
       {
         test: {
           name: 'browser',
+          attachmentsDir: 'test-results/browser/vitest-attachments',
           include: ['src/**/*.browser.test.ts'],
           browser: {
             enabled: true,
