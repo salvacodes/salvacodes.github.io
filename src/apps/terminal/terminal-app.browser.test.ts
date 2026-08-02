@@ -133,3 +133,13 @@ it('blank lines are not recorded in history', () => {
   expect(inputOf(app).value).toBe('whoami')
   cleanup()
 })
+
+it('dispatches an app-activate request when a command opens an app', () => {
+  const app = mountTerminal()
+  const events: CustomEvent[] = []
+  document.addEventListener('app-activate', (event) => events.push(event as CustomEvent), { once: true })
+  run(app, 'resume')
+  expect(events).toHaveLength(1)
+  expect(events[0]?.detail.appId).toBe('resume')
+  cleanup()
+})

@@ -101,3 +101,59 @@ it('maximizes new windows and marks them compact under the breakpoint', () => {
   expect(windowElement.hasAttribute('maximized')).toBe(true)
   matchMediaSpy.mockRestore()
 })
+
+const activateWith = (desktop: DesktopShell, detail: Record<string, unknown>) => {
+  desktop.shadowRoot
+    ?.querySelector('sc-dock')
+    ?.dispatchEvent(new CustomEvent('app-activate', { bubbles: true, composed: true, detail }))
+}
+
+it('opens separate windows for different params', () => {
+  const desktop = mount()
+  activateWith(desktop, { appId: 'case-study', params: { 'study-id': 'alpha' }, title: 'Alpha' })
+  activateWith(desktop, { appId: 'case-study', params: { 'study-id': 'beta' }, title: 'Beta' })
+  expect(desktop.shadowRoot?.querySelectorAll('sc-window')).toHaveLength(3)
+})
+
+it('focuses the existing window when the same params are requested again', () => {
+  const desktop = mount()
+  activateWith(desktop, { appId: 'case-study', params: { 'study-id': 'alpha' }, title: 'Alpha' })
+  activateWith(desktop, { appId: 'case-study', params: { 'study-id': 'alpha' }, title: 'Alpha' })
+  expect(desktop.shadowRoot?.querySelectorAll('sc-window')).toHaveLength(2)
+})
+
+it('passes params to the app element as attributes', () => {
+  const desktop = mount()
+  activateWith(desktop, { appId: 'case-study', params: { 'study-id': 'alpha' }, title: 'Alpha' })
+  const studyWindow = [...desktop.shadowRoot!.querySelectorAll('sc-window')].find((element) =>
+    element.querySelector('sc-case-study-app')
+  )!
+  expect(studyWindow.querySelector('sc-case-study-app')?.getAttribute('study-id')).toBe('alpha')
+})
+
+it('titles the window with the requested title', () => {
+  const desktop = mount()
+  activateWith(desktop, { appId: 'case-study', params: { 'study-id': 'alpha' }, title: 'Alpha' })
+  const titles = [...desktop.shadowRoot!.querySelectorAll('sc-window')].map(
+    (element) => element.shadowRoot?.querySelector('#title')?.textContent
+  )
+  expect(titles).toContain('Alpha')
+})
+
+it('prints a fragment dispatched as a print-document event', () => {
+  const printSpy = vi.spyOn(window, 'print').mockImplementation(() => undefined)
+  const desktop = mount()
+  const fragment = document.createDocumentFragment()
+  fragment.append(document.createElement('p'))
+  try {
+    desktop.shadowRoot!.dispatchEvent(
+      new CustomEvent('print-document', { bubbles: true, composed: true, detail: { fragment } })
+    )
+    expect(document.getElementById('print-surface')).not.toBeNull()
+    expect(printSpy).toHaveBeenCalledOnce()
+  } finally {
+    document.getElementById('print-surface')?.remove()
+    delete document.documentElement.dataset.printing
+    printSpy.mockRestore()
+  }
+})

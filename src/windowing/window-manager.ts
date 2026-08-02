@@ -13,6 +13,7 @@ export interface OpenRequest {
   title: string
   initialSize?: Size
   minSize?: Size
+  params?: Record<string, string>
 }
 
 export interface ManagedWindow {
@@ -25,6 +26,7 @@ export interface ManagedWindow {
   isFocused: boolean
   isMinimized: boolean
   isMaximized: boolean
+  params: Record<string, string>
 }
 
 export const TOP_BAR_HEIGHT = 32
@@ -72,7 +74,8 @@ export class WindowManager {
       zIndex: 0,
       isFocused: false,
       isMinimized: false,
-      isMaximized: false
+      isMaximized: false,
+      params: { ...(request.params ?? {}) }
     }
     this.#windows.set(window.id, window)
     this.#giveFocus(window)

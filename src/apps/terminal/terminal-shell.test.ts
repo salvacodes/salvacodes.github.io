@@ -75,3 +75,22 @@ describe('the home directory', () => {
     expect(shell().run('cat secrets.txt').lines).toEqual(['cat: secrets.txt: No such file or directory'])
   })
 })
+
+describe('resume command', () => {
+  it('asks the desktop to open the resume app', () => {
+    const shell = new TerminalShell()
+    const result = shell.run('resume')
+    expect(result.openAppId).toBe('resume')
+    expect(result.lines.join(' ')).toContain('Resume++')
+  })
+
+  it('leaves other commands without an app request', () => {
+    const shell = new TerminalShell()
+    expect(shell.run('whoami').openAppId).toBeUndefined()
+  })
+
+  it('lists resume in help', () => {
+    const shell = new TerminalShell()
+    expect(shell.run('help').lines.join('\n')).toContain('resume')
+  })
+})

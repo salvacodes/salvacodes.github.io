@@ -292,3 +292,25 @@ describe('minimizing windows', () => {
     expect(restored.isMaximized).toBe(true)
   })
 })
+
+describe('window params', () => {
+  it('defaults to no params', () => {
+    const manager = createManager()
+    expect(manager.open({ appId: 'welcome', title: 'Welcome' }).params).toEqual({})
+  })
+
+  it('keeps the requested params on the window', () => {
+    const manager = createManager()
+    const window = manager.open({ appId: 'case-study', title: 'A study', params: { 'study-id': 'alpha' } })
+    expect(window.params).toEqual({ 'study-id': 'alpha' })
+    expect(manager.list()[0]?.params).toEqual({ 'study-id': 'alpha' })
+  })
+
+  it('does not let callers mutate stored params', () => {
+    const manager = createManager()
+    const params = { 'study-id': 'alpha' }
+    manager.open({ appId: 'case-study', title: 'A study', params })
+    params['study-id'] = 'tampered'
+    expect(manager.list()[0]?.params).toEqual({ 'study-id': 'alpha' })
+  })
+})

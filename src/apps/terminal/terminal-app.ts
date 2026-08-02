@@ -1,3 +1,4 @@
+import { APP_ACTIVATE_EVENT, type AppActivateDetail } from '../app-activation'
 import styles from './terminal-app.css?inline'
 import { TerminalShell } from './terminal-shell'
 
@@ -86,6 +87,15 @@ export class TerminalApp extends HTMLElement {
     }
     for (const outputLine of result.lines) {
       this.#appendOutput(outputLine)
+    }
+    if (result.openAppId) {
+      this.dispatchEvent(
+        new CustomEvent<AppActivateDetail>(APP_ACTIVATE_EVENT, {
+          bubbles: true,
+          composed: true,
+          detail: { appId: result.openAppId }
+        })
+      )
     }
     this.scrollTop = this.scrollHeight
   }

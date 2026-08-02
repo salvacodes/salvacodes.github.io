@@ -1,4 +1,5 @@
 import { createAppRegistry } from '../apps'
+import { APP_ACTIVATE_EVENT, type AppActivateDetail } from '../apps/app-activation'
 import type { DesktopWindow } from '../windowing/desktop-window'
 import { WindowManager } from '../windowing/window-manager'
 import type { ActivitiesOverview } from './activities-overview'
@@ -9,6 +10,7 @@ import './dock'
 import './activities-overview'
 import styles from './desktop-shell.css?inline'
 import type { Dock } from './dock'
+import { PRINT_DOCUMENT_EVENT, type PrintDocumentDetail, printFragment } from './print-surface'
 
 const sheet = new CSSStyleSheet()
 sheet.replaceSync(styles)
@@ -44,8 +46,12 @@ export class DesktopShell extends HTMLElement {
       root.addEventListener('activities-toggle', () => {
         overview.open = !overview.open
       })
-      root.addEventListener('app-activate', (event) => {
-        this.#activateApp((event as CustomEvent<{ appId: string }>).detail.appId)
+      root.addEventListener(APP_ACTIVATE_EVENT, (event) => {
+        const detail = (event as CustomEvent<AppActivateDetail>).detail
+        this.#activateApp(detail.appId, detail.params ?? {}, detail.title)
+      })
+      root.addEventListener(PRINT_DOCUMENT_EVENT, (event) => {
+        printFragment((event as CustomEvent<PrintDocumentDetail>).detail.fragment)
       })
     }
     this.#unsubscribe = this.#manager.subscribe(() => this.#reconcileWindows())
@@ -64,19 +70,20 @@ export class DesktopShell extends HTMLElement {
     this.#compactQuery.removeEventListener('change', this.#compactListener)
   }
 
-  #activateApp(appId: string): void {
+  #activateApp(appId: string, params: Record<string, string> = {}, title?: string): void {
     const app = this.#registry.get(appId)
     const appWindows = this.#manager
       .list()
-      .filter((window) => window.appId === appId)
+      .filter((window) => window.appId === appId && this.#sameParams(window.params, params))
       .sort((a, b) => b.zIndex - a.zIndex)
     const topmost = appWindows[0]
     if (!topmost) {
       const opened = this.#manager.open({
         appId: app.id,
-        title: app.windowTitle ?? app.name,
+        title: title ?? app.windowTitle ?? app.name,
         initialSize: app.initialSize,
-        minSize: app.minSize
+        minSize: app.minSize,
+        params
       })
       if (this.#isCompact()) {
         this.#manager.maximize(opened.id)
@@ -88,6 +95,11 @@ export class DesktopShell extends HTMLElement {
     } else {
       this.#manager.focus(topmost.id)
     }
+  }
+
+  #sameParams(left: Record<string, string>, right: Record<string, string>): boolean {
+    const leftKeys = Object.keys(left)
+    return leftKeys.length === Object.keys(right).length && leftKeys.every((key) => left[key] === right[key])
   }
 
   #reconcileWindows(): void {
@@ -111,7 +123,11 @@ export class DesktopShell extends HTMLElement {
       element.manager = this.#manager
       element.windowId = managedWindow.id
       element.toggleAttribute('compact', this.#isCompact())
-      element.append(document.createElement(app.elementTag))
+      const appElement = document.createElement(app.elementTag)
+      for (const [name, value] of Object.entries(managedWindow.params)) {
+        appElement.setAttribute(name, value)
+      }
+      element.append(appElement)
       windowsLayer.append(element)
       this.#windowElements.set(managedWindow.id, element)
     }

@@ -3,6 +3,7 @@ import { homeDirectory } from './home-directory'
 export interface ShellResult {
   lines: string[]
   clearScreen: boolean
+  openAppId?: string
 }
 
 interface ShellCommand {
@@ -32,6 +33,11 @@ export class TerminalShell {
       name: 'whoami',
       description: 'who is behind this desktop',
       execute: () => output('Salva — cyber security engineering lead')
+    },
+    {
+      name: 'resume',
+      description: 'open the Resume++ app',
+      execute: () => ({ lines: ['Opening Resume++…'], clearScreen: false, openAppId: 'resume' })
     },
     {
       name: 'echo',
