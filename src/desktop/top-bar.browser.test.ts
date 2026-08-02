@@ -15,6 +15,21 @@ it('shows the current time and updates it', () => {
   vi.useRealTimers()
 })
 
+it('prevents its text from being selected', () => {
+  const topBar = document.createElement('sc-top-bar')
+  document.body.append(topBar)
+  const selectableTargets = [
+    topBar,
+    topBar.shadowRoot?.querySelector('#activities'),
+    topBar.shadowRoot?.querySelector('#clock'),
+    topBar.shadowRoot?.querySelector('#status'),
+  ]
+  for (const target of selectableTargets) {
+    expect(getComputedStyle(target as Element).userSelect).toBe('none')
+  }
+  topBar.remove()
+})
+
 it('dispatches activities-toggle when the activities button is clicked', () => {
   const topBar = document.createElement('sc-top-bar')
   document.body.append(topBar)
