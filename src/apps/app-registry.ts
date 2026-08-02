@@ -8,6 +8,7 @@ export interface AppDefinition {
   windowTitle?: string
   initialSize?: Size
   minSize?: Size
+  hidden?: boolean
 }
 
 export class AppRegistry {
@@ -22,6 +23,10 @@ export class AppRegistry {
 
   list(): AppDefinition[] {
     return [...this.#apps.values()]
+  }
+
+  listLaunchable(): AppDefinition[] {
+    return this.list().filter((app) => !app.hidden)
   }
 
   get(id: string): AppDefinition {

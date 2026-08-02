@@ -1,3 +1,4 @@
+import { APP_ACTIVATE_EVENT, type AppActivateDetail } from '../apps/app-activation'
 import type { AppRegistry } from '../apps/app-registry'
 import type { WindowManager } from '../windowing/window-manager'
 import styles from './dock.css?inline'
@@ -16,14 +17,14 @@ export class Dock extends HTMLElement {
       root.adoptedStyleSheets = [sheet]
       const nav = document.createElement('nav')
       nav.setAttribute('aria-label', 'Dock')
-      for (const app of this.registry.list()) {
+      for (const app of this.registry.listLaunchable()) {
         const button = document.createElement('button')
         button.dataset.appId = app.id
         button.title = app.name
         button.textContent = app.iconGlyph
         button.addEventListener('click', () => {
           this.dispatchEvent(
-            new CustomEvent('app-activate', {
+            new CustomEvent<AppActivateDetail>(APP_ACTIVATE_EVENT, {
               bubbles: true,
               composed: true,
               detail: { appId: app.id }

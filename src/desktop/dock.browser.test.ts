@@ -23,7 +23,7 @@ afterEach(() => {
 it('renders one launcher button per registered app', () => {
   const { dock } = mount()
   const buttons = dock.shadowRoot?.querySelectorAll('button[data-app-id]')
-  expect(buttons).toHaveLength(2)
+  expect(buttons).toHaveLength(3)
   expect(buttons?.[0]?.getAttribute('data-app-id')).toBe('terminal')
   expect(buttons?.[0]?.getAttribute('title')).toBe('Terminal')
 })

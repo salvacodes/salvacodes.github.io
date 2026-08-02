@@ -26,7 +26,7 @@ it('is hidden until opened', () => {
 it('renders a grid entry per app when open', () => {
   const overview = mount()
   overview.open = true
-  expect(overview.shadowRoot?.querySelectorAll('button[data-app-id]')).toHaveLength(2)
+  expect(overview.shadowRoot?.querySelectorAll('button[data-app-id]')).toHaveLength(3)
   const terminalButton = overview.shadowRoot?.querySelector<HTMLButtonElement>('[data-app-id="terminal"]')
   expect(terminalButton?.querySelector('.glyph')?.textContent).toBe('>_')
   expect(terminalButton?.querySelector('span:not(.glyph)')?.textContent).toBe('Terminal')

@@ -33,3 +33,14 @@ describe('AppRegistry', () => {
     expect(() => registry.get('nope')).toThrowError('Unknown app: nope')
   })
 })
+
+describe('launchable apps', () => {
+  it('excludes hidden apps from the launchable list but keeps them retrievable', () => {
+    const registry = new AppRegistry()
+    registry.register(welcomeApp)
+    registry.register({ ...welcomeApp, id: 'case-study', name: 'Case study', hidden: true })
+    expect(registry.listLaunchable().map((app) => app.id)).toEqual(['welcome'])
+    expect(registry.list().map((app) => app.id)).toEqual(['welcome', 'case-study'])
+    expect(registry.get('case-study').name).toBe('Case study')
+  })
+})

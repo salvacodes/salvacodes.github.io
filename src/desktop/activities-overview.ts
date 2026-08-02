@@ -1,3 +1,4 @@
+import { APP_ACTIVATE_EVENT, type AppActivateDetail } from '../apps/app-activation'
 import type { AppRegistry } from '../apps/app-registry'
 import styles from './activities-overview.css?inline'
 
@@ -39,7 +40,7 @@ export class ActivitiesOverview extends HTMLElement {
     })
     const grid = document.createElement('div')
     grid.className = 'grid'
-    for (const app of this.registry.list()) {
+    for (const app of this.registry.listLaunchable()) {
       const button = document.createElement('button')
       button.dataset.appId = app.id
       const glyph = document.createElement('span')
@@ -50,7 +51,7 @@ export class ActivitiesOverview extends HTMLElement {
       button.append(glyph, name)
       button.addEventListener('click', () => {
         this.dispatchEvent(
-          new CustomEvent('app-activate', {
+          new CustomEvent<AppActivateDetail>(APP_ACTIVATE_EVENT, {
             bubbles: true,
             composed: true,
             detail: { appId: app.id }
