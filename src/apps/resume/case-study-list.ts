@@ -1,4 +1,4 @@
-import { textElement } from './dom'
+import { textElement } from '../../dom'
 import type { CaseStudy } from './resume-model'
 
 const renderOpener = (study: CaseStudy): HTMLButtonElement => {

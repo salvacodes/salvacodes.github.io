@@ -22,7 +22,7 @@ it('prevents its text from being selected', () => {
     topBar,
     topBar.shadowRoot?.querySelector('#activities'),
     topBar.shadowRoot?.querySelector('#clock'),
-    topBar.shadowRoot?.querySelector('#status'),
+    topBar.shadowRoot?.querySelector('#status')
   ]
   for (const target of selectableTargets) {
     expect(getComputedStyle(target as Element).userSelect).toBe('none')

@@ -1,4 +1,4 @@
-import { textElement } from './dom'
+import { textElement } from '../../dom'
 import { formatPeriod } from './period'
 import type { CareerStage } from './resume-model'
 

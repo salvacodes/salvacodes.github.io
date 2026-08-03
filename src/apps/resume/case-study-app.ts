@@ -2,8 +2,8 @@ import { readSelection, standardContentItems } from '../../desktop/context-menu/
 import type { Point } from '../../desktop/context-menu/context-menu-model'
 import { requestContextMenu } from '../../desktop/context-menu/context-menu-request'
 import { observeLongPress } from '../../desktop/context-menu/long-press'
+import { textElement } from '../../dom'
 import styles from './case-study-app.css?inline'
-import { textElement } from './dom'
 import { resumeContent } from './resume-content'
 import type { CaseStudy } from './resume-model'
 

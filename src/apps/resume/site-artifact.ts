@@ -1,4 +1,4 @@
-import { textElement } from './dom'
+import { textElement } from '../../dom'
 import type { SiteArtifact } from './resume-model'
 
 export const renderSiteArtifact = (site: SiteArtifact): DocumentFragment => {

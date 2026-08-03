@@ -1,4 +1,4 @@
-import { textElement } from './dom'
+import { textElement } from '../../dom'
 import { formatPeriod } from './period'
 import type { CareerStage, ResumeContent, Skill } from './resume-model'
 import { groupSkillsByCategory } from './skill-grouping'
