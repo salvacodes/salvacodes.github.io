@@ -67,7 +67,7 @@ it('greys out the actions that have no implementation yet', () => {
   const disabledIds = detail.entries
     .filter((entry): entry is MenuAction => 'disabled' in entry && Boolean(entry.disabled))
     .map((entry) => entry.id)
-  expect(disabledIds).toEqual(['change-background', 'display-settings'])
+  expect(disabledIds).toEqual(['change-background', 'display-settings', 'about'])
 })
 
 it('opens the terminal from the desktop menu', () => {

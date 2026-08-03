@@ -48,8 +48,8 @@ it('activating an app dispatches app-activate and closes', () => {
     },
     { once: true }
   )
-  overview.shadowRoot?.querySelector<HTMLButtonElement>('[data-app-id="readme"]')?.click()
-  expect(detail).toEqual({ appId: 'readme' })
+  overview.shadowRoot?.querySelector<HTMLButtonElement>('[data-app-id="writings"]')?.click()
+  expect(detail).toEqual({ appId: 'writings' })
   expect(overview.open).toBe(false)
 })
 

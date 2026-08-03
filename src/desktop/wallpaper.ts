@@ -51,7 +51,7 @@ export class Wallpaper extends HTMLElement {
       { separator: true },
       { id: 'activities', label: 'Activities Overview', perform: () => this.#toggleActivities() },
       { separator: true },
-      { id: 'about', label: 'About This Desktop', perform: () => this.#activate('readme') }
+      { id: 'about', label: 'About This Desktop', disabled: true }
     ]
   }
 

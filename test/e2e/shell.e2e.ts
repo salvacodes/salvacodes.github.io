@@ -23,8 +23,8 @@ test('launches the terminal from the dock', async ({ page }) => {
 test('launches from the activities overview', async ({ page }) => {
   await page.goto('/')
   await page.locator('sc-top-bar #activities').click()
-  await page.locator('sc-overview button[data-app-id="readme"]').click()
-  await expect(page.locator('sc-window', { has: page.locator('#title:text-is("Readme")') })).toBeVisible()
+  await page.locator('sc-overview button[data-app-id="writings"]').click()
+  await expect(page.locator('sc-window', { has: page.locator('#title:text-is("Writings")') })).toBeVisible()
   await expect(page.locator('sc-overview')).not.toHaveAttribute('open', '')
 })
 
@@ -41,18 +41,19 @@ test('minimize hides the window and the dock restores it', async ({ page }) => {
 test('clicking a background window raises it', async ({ page }) => {
   await page.goto('/')
   await page.locator('sc-dock button[data-app-id="terminal"]').click()
-  await page.locator('sc-dock button[data-app-id="readme"]').click()
+  await page.locator('sc-dock button[data-app-id="writings"]').click()
+  await page.locator('sc-dock button[data-app-id="terminal"]').click()
   const zIndexOf = async (appTitle: string) =>
     Number(
       await page
         .locator('sc-window', { has: page.locator(`#title:text-is("${appTitle}")`) })
         .evaluate((element) => element.style.zIndex)
     )
-  expect(await zIndexOf('Readme')).toBeGreaterThan(await zIndexOf('user@salva.codes: ~'))
+  expect(await zIndexOf('user@salva.codes: ~')).toBeGreaterThan(await zIndexOf('Writings'))
   await page
-    .locator('sc-window', { has: page.locator('#title:text-is("user@salva.codes: ~")') })
-    .click({ position: { x: 200, y: 20 } })
-  expect(await zIndexOf('user@salva.codes: ~')).toBeGreaterThan(await zIndexOf('Readme'))
+    .locator('sc-window', { has: page.locator('#title:text-is("Writings")') })
+    .click({ position: { x: 20, y: 20 } })
+  expect(await zIndexOf('Writings')).toBeGreaterThan(await zIndexOf('user@salva.codes: ~'))
 })
 
 test('the terminal executes typed commands', async ({ page }) => {

@@ -33,13 +33,6 @@ export const createAppRegistry = (): AppRegistry => {
     minSize: { width: 380, height: 320 }
   })
   registry.register({
-    id: 'readme',
-    name: 'Readme',
-    iconGlyph: '#',
-    elementTag: 'sc-terminal-app',
-    initialSize: { width: 560, height: 380 }
-  })
-  registry.register({
     id: 'case-study',
     name: 'Case study',
     iconGlyph: '§',
