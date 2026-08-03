@@ -1,5 +1,6 @@
 import { createAppRegistry } from '../apps'
 import { APP_ACTIVATE_EVENT, type AppActivateDetail } from '../apps/app-activation'
+import { startLocationSync } from '../routing/location-sync'
 import type { DesktopWindow } from '../windowing/desktop-window'
 import { WindowManager } from '../windowing/window-manager'
 import type { ActivitiesOverview } from './activities-overview'
@@ -49,6 +50,7 @@ export class DesktopShell extends HTMLElement {
       })
     )
   }
+  #stopLocationSync?: () => void
   #compactQuery = window.matchMedia('(max-width: 768px)')
   #compactListener = (): void => this.#applyCompactMode()
   #hasBooted = false
@@ -100,9 +102,14 @@ export class DesktopShell extends HTMLElement {
       this.#hasBooted = true
       this.#activateApp('terminal')
     }
+    this.#stopLocationSync = startLocationSync({
+      manager: this.#manager,
+      activate: (appId, params) => this.#activateApp(appId, params)
+    })
   }
 
   disconnectedCallback(): void {
+    this.#stopLocationSync?.()
     this.#unsubscribe?.()
     window.removeEventListener('resize', this.#resizeListener)
     window.removeEventListener('contextmenu', this.#suppressNativeMenu)

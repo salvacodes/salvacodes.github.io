@@ -2,6 +2,7 @@ import { AppRegistry } from './app-registry'
 import './resume/case-study-app'
 import './resume/resume-app'
 import './terminal/terminal-app'
+import './writings/writings-app'
 
 export const createAppRegistry = (): AppRegistry => {
   const registry = new AppRegistry()
@@ -21,6 +22,15 @@ export const createAppRegistry = (): AppRegistry => {
     windowTitle: 'Resume++',
     initialSize: { width: 880, height: 620 },
     minSize: { width: 420, height: 320 }
+  })
+  registry.register({
+    id: 'writings',
+    name: 'Writings',
+    iconGlyph: '✎',
+    elementTag: 'sc-writings-app',
+    windowTitle: 'Writings',
+    initialSize: { width: 900, height: 640 },
+    minSize: { width: 380, height: 320 }
   })
   registry.register({
     id: 'readme',

@@ -1,10 +1,14 @@
+import { POST_SLUG_PARAM, WRITINGS_APP_ID } from '../../routing/post-route'
 import { homeDirectory } from './home-directory'
 
 export interface ShellResult {
   lines: string[]
   clearScreen: boolean
   openAppId?: string
+  openParams?: Record<string, string>
 }
+
+const WRITING_DIRECTORY = 'writing/'
 
 interface ShellCommand {
   name: string
@@ -18,9 +22,11 @@ const describeCommand = (command: ShellCommand): string => `${command.name.padEn
 
 export class TerminalShell {
   #files: Record<string, string>
+  #postSlugs: string[]
 
-  constructor(files: Record<string, string> = homeDirectory) {
+  constructor(files: Record<string, string> = homeDirectory, postSlugs: string[] = []) {
     this.#files = files
+    this.#postSlugs = postSlugs
   }
 
   #commands: ShellCommand[] = [
@@ -38,6 +44,16 @@ export class TerminalShell {
       name: 'resume',
       description: 'open the Resume++ app',
       execute: () => ({ lines: ['Opening Resume++…'], clearScreen: false, openAppId: 'resume' })
+    },
+    {
+      name: 'writing',
+      description: 'open the Writings app, or one post',
+      execute: (args) => this.#openWriting(args)
+    },
+    {
+      name: 'blog',
+      description: 'the same as writing',
+      execute: (args) => this.#openWriting(args)
     },
     {
       name: 'echo',
@@ -68,13 +84,35 @@ export class TerminalShell {
 
   #listHomeFiles(): ShellResult {
     const names = Object.keys(this.#files).filter((name) => !name.startsWith('/'))
-    return output(names.sort().join('  '))
+    return output([...names, WRITING_DIRECTORY].sort().join('  '))
+  }
+
+  #openWriting(args: string[]): ShellResult {
+    const [slug] = args
+    if (!slug) {
+      return { lines: ['Opening Writings…'], clearScreen: false, openAppId: WRITINGS_APP_ID }
+    }
+    if (!this.#postSlugs.includes(slug)) {
+      return output(
+        `writing: ${slug}: no such post`,
+        ...(this.#postSlugs.length === 0 ? ['Nothing published yet.'] : ['Published posts:', ...this.#postSlugs])
+      )
+    }
+    return {
+      lines: [`Opening ${slug}…`],
+      clearScreen: false,
+      openAppId: WRITINGS_APP_ID,
+      openParams: { [POST_SLUG_PARAM]: slug }
+    }
   }
 
   #readFile(args: string[]): ShellResult {
     const name = args[0]
     if (!name) {
       return output('cat: missing file operand')
+    }
+    if (name === WRITING_DIRECTORY) {
+      return output(`cat: ${name}: Is a directory`)
     }
     const content = this.#files[name]
     if (content === undefined) {

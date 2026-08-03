@@ -47,7 +47,7 @@ describe('identity and system commands', () => {
 
 describe('the home directory', () => {
   it('ls lists home files but hides system paths', () => {
-    expect(shell().run('ls').lines).toEqual(['about.txt  resume.txt'])
+    expect(shell().run('ls').lines).toEqual(['about.txt  resume.txt  writing/'])
   })
 
   it('cat prints a file line by line', () => {
@@ -92,5 +92,55 @@ describe('resume command', () => {
   it('lists resume in help', () => {
     const shell = new TerminalShell()
     expect(shell.run('help').lines.join('\n')).toContain('resume')
+  })
+})
+
+describe('writing command', () => {
+  const writingShell = () => new TerminalShell(undefined, ['how-this-site-is-built', 'another-post'])
+
+  it('asks the desktop to open the writings app', () => {
+    const result = writingShell().run('writing')
+
+    expect(result.openAppId).toBe('writings')
+    expect(result.openParams).toBeUndefined()
+  })
+
+  it('opens a post by slug', () => {
+    const result = writingShell().run('writing another-post')
+
+    expect(result.openAppId).toBe('writings')
+    expect(result.openParams).toEqual({ 'post-slug': 'another-post' })
+  })
+
+  it('answers to blog as well', () => {
+    expect(writingShell().run('blog').openAppId).toBe('writings')
+  })
+
+  it('lists what it knows when the slug is unknown', () => {
+    const result = writingShell().run('writing no-such-post')
+
+    expect(result.openAppId).toBeUndefined()
+    expect(result.lines.join('\n')).toContain('no-such-post')
+    expect(result.lines.join('\n')).toContain('how-this-site-is-built')
+  })
+
+  it('says so when nothing is published', () => {
+    const result = new TerminalShell().run('writing no-such-post')
+
+    expect(result.lines.join('\n')).toMatch(/nothing published/i)
+  })
+
+  it('lists writing in help', () => {
+    expect(writingShell().run('help').lines.join('\n')).toContain('writing')
+  })
+})
+
+describe('the writing directory', () => {
+  it('shows up in ls', () => {
+    expect(new TerminalShell().run('ls').lines.join(' ')).toContain('writing/')
+  })
+
+  it('cannot be read with cat', () => {
+    expect(new TerminalShell().run('cat writing/').lines).toEqual(['cat: writing/: Is a directory'])
   })
 })

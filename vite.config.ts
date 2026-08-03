@@ -1,5 +1,6 @@
 import { playwright } from '@vitest/browser-playwright'
 import { defineConfig, type Plugin } from 'vitest/config'
+import { writings } from './src/content-pipeline/writings-plugin'
 
 const contentSecurityPolicy = [
   "default-src 'none'",
@@ -24,10 +25,11 @@ const injectMetaCsp = (): Plugin => ({
 })
 
 export default defineConfig({
-  plugins: [injectMetaCsp()],
+  plugins: [injectMetaCsp(), writings()],
   test: {
     projects: [
       {
+        extends: true,
         test: {
           name: 'unit',
           environment: 'node',
@@ -37,6 +39,7 @@ export default defineConfig({
         }
       },
       {
+        extends: true,
         test: {
           name: 'browser',
           attachmentsDir: 'test-results/browser/vitest-attachments',

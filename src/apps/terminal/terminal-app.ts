@@ -1,8 +1,10 @@
+import { postSummaries } from 'virtual:writing-index'
 import { readSelection, standardContentItems } from '../../desktop/context-menu/content-items'
 import type { MenuEntry, Point } from '../../desktop/context-menu/context-menu-model'
 import { requestContextMenu } from '../../desktop/context-menu/context-menu-request'
 import { observeLongPress } from '../../desktop/context-menu/long-press'
 import { APP_ACTIVATE_EVENT, type AppActivateDetail } from '../app-activation'
+import { homeDirectory } from './home-directory'
 import styles from './terminal-app.css?inline'
 import { TerminalShell } from './terminal-shell'
 
@@ -21,7 +23,10 @@ const PROMPT = 'user@salva.codes:~$'
 const BOOT_COMMANDS = ['whoami', 'cat /etc/motd']
 
 export class TerminalApp extends HTMLElement {
-  #shell = new TerminalShell()
+  #shell = new TerminalShell(
+    homeDirectory,
+    postSummaries.map((summary) => summary.slug)
+  )
   #scrollback!: HTMLElement
   #input!: HTMLInputElement
   #history: string[] = []
@@ -102,7 +107,7 @@ export class TerminalApp extends HTMLElement {
         new CustomEvent<AppActivateDetail>(APP_ACTIVATE_EVENT, {
           bubbles: true,
           composed: true,
-          detail: { appId: result.openAppId }
+          detail: { appId: result.openAppId, params: result.openParams }
         })
       )
     }
