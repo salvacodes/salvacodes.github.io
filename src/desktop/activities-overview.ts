@@ -6,6 +6,7 @@ import { appIconMenuEntries } from './context-menu/app-icon-menu'
 import type { Point } from './context-menu/context-menu-model'
 import { requestContextMenu } from './context-menu/context-menu-request'
 import { observeLongPress } from './context-menu/long-press'
+import { createIconSvg } from './icon-svg'
 
 const sheet = new CSSStyleSheet()
 sheet.replaceSync(styles)
@@ -51,7 +52,12 @@ export class ActivitiesOverview extends HTMLElement {
       button.dataset.appId = app.id
       const glyph = document.createElement('span')
       glyph.className = 'glyph'
-      glyph.textContent = app.iconGlyph
+      const icon = app.iconSvg ? createIconSvg(app.iconSvg) : null
+      if (icon) {
+        glyph.append(icon)
+      } else {
+        glyph.textContent = app.iconGlyph
+      }
       const name = document.createElement('span')
       name.textContent = app.name
       button.append(glyph, name)

@@ -19,6 +19,14 @@ export const formatClock = (date: Date): string => {
   return `${MONTHS[date.getMonth()]} ${date.getDate()} ${hours}:${minutes}`
 }
 
+export const SYSTEM_MENU_TOGGLE_EVENT = 'system-menu-toggle'
+
+const STATUS_ICONS = [
+  '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><rect x="2" y="4" width="12" height="5" rx="1" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M8 9v3M5 12h6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>',
+  '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M4 6h2.5L9.5 3v10L6.5 10H4z" fill="currentColor"/><path d="M11.5 6.2a2.6 2.6 0 0 1 0 3.6" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>',
+  '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><rect x="1.5" y="5" width="11" height="6" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.3"/><rect x="3" y="6.5" width="8" height="3" rx="0.6" fill="currentColor"/><path d="M14 7v2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>'
+].join('')
+
 const BaseClass = (typeof HTMLElement !== 'undefined' ? HTMLElement : Object) as typeof HTMLElement
 
 export class TopBar extends BaseClass {
@@ -31,10 +39,13 @@ export class TopBar extends BaseClass {
       root.innerHTML = `
         <button id="activities">Activities</button>
         <time id="clock"></time>
-        <div id="status" aria-hidden="true"><span>▲</span><span>◆</span><span>⏻</span></div>
+        <button id="status" aria-haspopup="dialog" aria-expanded="false" aria-label="System menu">${STATUS_ICONS}</button>
       `
       root.querySelector('#activities')?.addEventListener('click', () => {
         this.dispatchEvent(new CustomEvent('activities-toggle', { bubbles: true, composed: true }))
+      })
+      root.querySelector('#status')?.addEventListener('click', () => {
+        this.dispatchEvent(new CustomEvent(SYSTEM_MENU_TOGGLE_EVENT, { bubbles: true, composed: true }))
       })
     }
     this.#updateClock()
@@ -43,6 +54,18 @@ export class TopBar extends BaseClass {
 
   disconnectedCallback(): void {
     clearInterval(this.#clockTimer)
+  }
+
+  get statusButton(): HTMLButtonElement {
+    const button = this.shadowRoot?.querySelector<HTMLButtonElement>('#status')
+    if (!button) {
+      throw new Error('top bar has no status button')
+    }
+    return button
+  }
+
+  set systemMenuExpanded(value: boolean) {
+    this.statusButton.setAttribute('aria-expanded', String(value))
   }
 
   #updateClock(): void {

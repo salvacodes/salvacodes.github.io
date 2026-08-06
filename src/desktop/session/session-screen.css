@@ -1,0 +1,98 @@
+:host {
+  position: absolute;
+  inset: 0;
+  z-index: 40000;
+  display: none;
+  background: #000000;
+  color: var(--color-terminal-green);
+  font-family: var(--font-mono);
+}
+
+:host([data-phase="shutting-down"]),
+:host([data-phase="off"]),
+:host([data-phase="booting"]) {
+  display: block;
+}
+
+:host([data-phase="shutting-down"]) {
+  animation: fade-to-black 600ms ease-in forwards;
+}
+
+.spinner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 28px;
+  height: 28px;
+  margin: -14px 0 0 -14px;
+  border: 2px solid rgb(255 255 255 / 0.25);
+  border-top-color: rgb(255 255 255 / 0.85);
+  border-radius: 50%;
+  animation: spin 900ms linear infinite;
+}
+
+#power-on {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  border: 2px solid rgb(255 255 255 / 0.5);
+  border-radius: 50%;
+  background: transparent;
+  color: rgb(255 255 255 / 0.8);
+  cursor: pointer;
+  animation: breathe 2.4s ease-in-out infinite alternate;
+}
+
+#boot {
+  position: absolute;
+  inset: 0;
+  padding: 32px;
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  cursor: pointer;
+}
+
+:host(:not([data-phase="shutting-down"])) .spinner,
+:host(:not([data-phase="off"])) #power-on,
+:host(:not([data-phase="booting"])) #boot {
+  display: none;
+}
+
+@keyframes fade-to-black {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes breathe {
+  from {
+    opacity: 0.55;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :host([data-phase="shutting-down"]),
+  .spinner,
+  #power-on {
+    animation: none;
+  }
+}

@@ -4,6 +4,7 @@ export interface AppDefinition {
   id: string
   name: string
   iconGlyph: string
+  iconSvg?: string
   elementTag: string
   windowTitle?: string
   initialSize?: Size

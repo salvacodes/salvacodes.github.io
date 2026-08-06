@@ -58,3 +58,9 @@
   font-family: var(--font-mono);
   font-size: 1.2rem;
 }
+
+.glyph svg {
+  display: block;
+  width: 21px;
+  height: 21px;
+}

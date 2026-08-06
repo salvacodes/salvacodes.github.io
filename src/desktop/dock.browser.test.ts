@@ -1,9 +1,11 @@
 import { afterEach, expect, it } from 'vitest'
 import { createAppRegistry } from '../apps'
+import { SETTINGS_ICON_MARKUP } from '../apps/settings/settings-icon'
 import { WindowManager } from '../windowing/window-manager'
 import { CONTEXT_MENU_EVENT, type ContextMenuDetail } from './context-menu/context-menu-request'
 import './dock'
 import type { Dock } from './dock'
+import { createIconSvg } from './icon-svg'
 
 const mount = () => {
   const manager = new WindowManager({ width: 1280, height: 800 })
@@ -76,4 +78,20 @@ it('requests an app menu when a launcher is right-clicked', () => {
     '---',
     'Quit'
   ])
+})
+
+it('gives the settings app the shared cogwheel rather than a text glyph', () => {
+  const { dock } = mount()
+  const button = dock.shadowRoot?.querySelector<HTMLElement>('button[data-app-id="settings"]')
+  const icon = button?.querySelector('svg')
+  expect(icon).not.toBeNull()
+  expect(icon?.outerHTML).toBe(createIconSvg(SETTINGS_ICON_MARKUP)?.outerHTML)
+  expect(button?.textContent).toBe('')
+})
+
+it('leaves the other apps on their text glyphs', () => {
+  const { dock } = mount()
+  const terminal = dock.shadowRoot?.querySelector<HTMLElement>('button[data-app-id="terminal"]')
+  expect(terminal?.querySelector('svg')).toBeNull()
+  expect(terminal?.textContent).not.toBe('')
 })

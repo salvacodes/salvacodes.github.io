@@ -1,9 +1,11 @@
 import { afterEach, expect, it } from 'vitest'
 import { createAppRegistry } from '../apps'
+import { SETTINGS_ICON_MARKUP } from '../apps/settings/settings-icon'
 import { WindowManager } from '../windowing/window-manager'
 import './activities-overview'
 import type { ActivitiesOverview } from './activities-overview'
 import { CONTEXT_MENU_EVENT, type ContextMenuDetail } from './context-menu/context-menu-request'
+import { createIconSvg } from './icon-svg'
 
 const mount = () => {
   const overview = document.createElement('sc-overview') as ActivitiesOverview
@@ -85,4 +87,10 @@ it('requests an app menu when a grid entry is right-clicked', () => {
     '---',
     'Quit'
   ])
+})
+
+it('gives the settings app the same cogwheel the quick settings footer uses', () => {
+  const overview = mount()
+  const glyph = overview.shadowRoot?.querySelector<HTMLElement>('button[data-app-id="settings"] .glyph')
+  expect(glyph?.querySelector('svg')?.outerHTML).toBe(createIconSvg(SETTINGS_ICON_MARKUP)?.outerHTML)
 })

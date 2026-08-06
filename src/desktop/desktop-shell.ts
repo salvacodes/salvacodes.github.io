@@ -16,6 +16,25 @@ import { deepActiveElement } from './context-menu/focus-target'
 import styles from './desktop-shell.css?inline'
 import type { Dock } from './dock'
 import { PRINT_DOCUMENT_EVENT, type PrintDocumentDetail, printFragment } from './print-surface'
+import './quick-settings/quick-settings-panel'
+import { POWER_ACTION_ID, SETTINGS_ACTION_ID } from './quick-settings/quick-settings-model'
+import {
+  QUICK_SETTINGS_ACTION_EVENT,
+  QUICK_SETTINGS_DISMISSED_EVENT,
+  type QuickSettingsActionDetail,
+  type QuickSettingsPanel
+} from './quick-settings/quick-settings-panel'
+import './session/session-screen'
+import './session/shutdown-dialog'
+import {
+  BOOT_COMPLETE_EVENT,
+  POWER_ON_REQUESTED_EVENT,
+  type SessionScreen,
+  SHUTDOWN_FADE_COMPLETE_EVENT
+} from './session/session-screen'
+import { SessionState } from './session/session-state'
+import { SHUTDOWN_CANCELLED_EVENT, SHUTDOWN_CONFIRMED_EVENT, type ShutdownDialog } from './session/shutdown-dialog'
+import { SYSTEM_MENU_TOGGLE_EVENT, type TopBar } from './top-bar'
 
 const sheet = new CSSStyleSheet()
 sheet.replaceSync(styles)
@@ -54,13 +73,15 @@ export class DesktopShell extends HTMLElement {
   #compactQuery = window.matchMedia('(max-width: 768px)')
   #compactListener = (): void => this.#applyCompactMode()
   #hasBooted = false
+  #session = new SessionState()
 
   connectedCallback(): void {
     if (!this.shadowRoot) {
       const root = this.attachShadow({ mode: 'open' })
       root.adoptedStyleSheets = [sheet]
       root.append(document.createElement('sc-wallpaper'))
-      root.append(document.createElement('sc-top-bar'))
+      const topBar = document.createElement('sc-top-bar') as TopBar
+      root.append(topBar)
       const windowsLayer = document.createElement('div')
       windowsLayer.id = 'windows'
       root.append(windowsLayer)
@@ -72,10 +93,62 @@ export class DesktopShell extends HTMLElement {
       overview.registry = this.#registry
       overview.manager = this.#manager
       root.append(overview)
+      const quickSettings = document.createElement('sc-quick-settings') as QuickSettingsPanel
+      root.append(quickSettings)
+      const shutdownDialog = document.createElement('sc-shutdown-dialog') as ShutdownDialog
+      root.append(shutdownDialog)
+      const sessionScreen = document.createElement('sc-session-screen') as SessionScreen
+      root.append(sessionScreen)
       this.#menuLayer = document.createElement('sc-context-menu') as ContextMenuLayer
       root.append(this.#menuLayer)
+      const syncSystemMenu = (): void => {
+        topBar.systemMenuExpanded = quickSettings.isOpen
+      }
       root.addEventListener('activities-toggle', () => {
         overview.open = !overview.open
+      })
+      root.addEventListener(SYSTEM_MENU_TOGGLE_EVENT, () => {
+        if (quickSettings.isOpen) {
+          quickSettings.close()
+        } else {
+          quickSettings.open(topBar.statusButton)
+        }
+        syncSystemMenu()
+      })
+      root.addEventListener(QUICK_SETTINGS_DISMISSED_EVENT, () => {
+        syncSystemMenu()
+      })
+      root.addEventListener(QUICK_SETTINGS_ACTION_EVENT, (event) => {
+        const { actionId } = (event as CustomEvent<QuickSettingsActionDetail>).detail
+        syncSystemMenu()
+        if (actionId === SETTINGS_ACTION_ID) {
+          this.#activateApp('settings')
+        }
+        if (actionId === POWER_ACTION_ID) {
+          this.#session.requestShutdown()
+          shutdownDialog.open()
+        }
+      })
+      const holdsTheScreen = (): boolean => this.#session.phase !== 'running' && this.#session.phase !== 'confirming'
+      this.#session.subscribe(() => {
+        sessionScreen.phase = this.#session.phase
+        for (const layer of root.children) {
+          if (layer !== sessionScreen) {
+            ;(layer as HTMLElement).inert = holdsTheScreen()
+          }
+        }
+      })
+      root.addEventListener(SHUTDOWN_CANCELLED_EVENT, () => this.#session.cancel())
+      root.addEventListener(SHUTDOWN_CONFIRMED_EVENT, () => {
+        this.#session.confirm()
+        this.#closeAllWindows()
+      })
+      root.addEventListener(SHUTDOWN_FADE_COMPLETE_EVENT, () => this.#session.finishShutdown())
+      root.addEventListener(POWER_ON_REQUESTED_EVENT, () => this.#session.powerOn())
+      root.addEventListener(BOOT_COMPLETE_EVENT, () => {
+        this.#session.finishBoot()
+        this.#hasBooted = false
+        this.#bootDesktop()
       })
       root.addEventListener(APP_ACTIVATE_EVENT, (event) => {
         const detail = (event as CustomEvent<AppActivateDetail>).detail
@@ -98,10 +171,7 @@ export class DesktopShell extends HTMLElement {
     window.addEventListener('keydown', this.#menuKeyListener)
     this.#compactQuery.addEventListener('change', this.#compactListener)
     this.#applyCompactMode()
-    if (!this.#hasBooted) {
-      this.#hasBooted = true
-      this.#activateApp('terminal')
-    }
+    this.#bootDesktop()
     this.#stopLocationSync = startLocationSync({
       manager: this.#manager,
       activate: (appId, params) => this.#activateApp(appId, params)
@@ -141,6 +211,20 @@ export class DesktopShell extends HTMLElement {
       this.#manager.restore(topmost.id)
     } else {
       this.#manager.focus(topmost.id)
+    }
+  }
+
+  #bootDesktop(): void {
+    if (this.#hasBooted) {
+      return
+    }
+    this.#hasBooted = true
+    this.#activateApp('terminal')
+  }
+
+  #closeAllWindows(): void {
+    for (const managedWindow of this.#manager.list()) {
+      this.#manager.close(managedWindow.id)
     }
   }
 

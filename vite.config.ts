@@ -8,6 +8,7 @@ const contentSecurityPolicy = [
   "style-src 'self'",
   "img-src 'self' data:",
   "font-src 'self'",
+  "manifest-src 'self'",
   "connect-src 'none'",
   "base-uri 'none'",
   "form-action 'none'"

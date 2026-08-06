@@ -1,0 +1,66 @@
+:host {
+  position: absolute;
+  inset: 0;
+  z-index: 10002;
+  display: none;
+}
+
+:host([open]) {
+  display: block;
+}
+
+.scrim {
+  position: absolute;
+  inset: 0;
+  background: rgb(0 0 0 / 0.55);
+}
+
+.dialog {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(90vw, 380px);
+  box-sizing: border-box;
+  padding: 22px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: 0 18px 48px rgb(0 0 0 / 0.5);
+  text-align: center;
+  font-family: var(--font-ui);
+}
+
+h2 {
+  margin: 0 0 8px;
+  font-size: 1.05rem;
+}
+
+p {
+  margin: 0 0 20px;
+  color: var(--color-text-dim);
+  font-size: 0.875rem;
+}
+
+.buttons {
+  display: flex;
+  gap: 10px;
+}
+
+button {
+  flex: 1;
+  padding: 9px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface-raised);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+#confirm {
+  border-color: var(--color-destructive);
+  background: var(--color-destructive);
+  color: #ffffff;
+}

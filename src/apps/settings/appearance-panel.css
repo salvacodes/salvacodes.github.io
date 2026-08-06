@@ -1,0 +1,98 @@
+:host {
+  display: block;
+  padding: 20px 24px;
+  color: var(--color-text);
+  font-size: 0.9rem;
+}
+
+h2 {
+  margin: 0 0 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-dim);
+}
+
+section + section {
+  margin-top: 28px;
+}
+
+.styles {
+  display: flex;
+  gap: 12px;
+}
+
+.style {
+  flex: 1;
+  padding: 0;
+  border: 2px solid var(--color-border);
+  border-radius: 10px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.style[aria-checked="true"] {
+  border-color: var(--color-accent);
+}
+
+.style-preview {
+  height: 84px;
+}
+
+.style-preview[data-preview="dark"] {
+  background: linear-gradient(160deg, #0c0f14 0%, #1b2430 100%);
+}
+
+.style-preview[data-preview="light"] {
+  background: linear-gradient(160deg, #f4f5f7 0%, #ffffff 100%);
+}
+
+.style-name {
+  display: block;
+  padding: 8px;
+  text-align: center;
+}
+
+.wallpapers {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.wallpaper {
+  position: relative;
+  padding: 0;
+  height: 110px;
+  border: 2px solid var(--color-border);
+  border-radius: 10px;
+  background: transparent;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.wallpaper[aria-pressed="true"] {
+  border-color: var(--color-accent);
+}
+
+.wallpaper .surface {
+  pointer-events: none;
+}
+
+.wallpaper .motif {
+  right: 8%;
+  bottom: 10%;
+  width: 60%;
+}
+
+.wallpaper-name {
+  position: absolute;
+  left: 8px;
+  bottom: 6px;
+  color: var(--color-text);
+  font-size: 0.75rem;
+  text-shadow: 0 1px 3px rgb(0 0 0 / 0.6);
+}

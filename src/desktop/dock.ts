@@ -6,6 +6,7 @@ import type { Point } from './context-menu/context-menu-model'
 import { requestContextMenu } from './context-menu/context-menu-request'
 import { observeLongPress } from './context-menu/long-press'
 import styles from './dock.css?inline'
+import { createIconSvg } from './icon-svg'
 
 const sheet = new CSSStyleSheet()
 sheet.replaceSync(styles)
@@ -25,7 +26,12 @@ export class Dock extends HTMLElement {
         const button = document.createElement('button')
         button.dataset.appId = app.id
         button.title = app.name
-        button.textContent = app.iconGlyph
+        const icon = app.iconSvg ? createIconSvg(app.iconSvg) : null
+        if (icon) {
+          button.append(icon)
+        } else {
+          button.textContent = app.iconGlyph
+        }
         button.addEventListener('click', () => {
           this.#activate(app.id)
         })

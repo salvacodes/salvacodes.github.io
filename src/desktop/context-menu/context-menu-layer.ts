@@ -1,3 +1,4 @@
+import { observePopoverDismissal } from '../popover/popover-dismissal'
 import styles from './context-menu-layer.css?inline'
 import { isSeparator, type MenuAction, type MenuEntry, placeMenu } from './context-menu-model'
 import type { ContextMenuDetail } from './context-menu-request'
@@ -8,13 +9,7 @@ sheet.replaceSync(styles)
 export class ContextMenuLayer extends HTMLElement {
   #menu!: HTMLElement
   #returnFocusTo: HTMLElement | null = null
-  #outsidePointerListener = (event: Event): void => {
-    if (event.composedPath().includes(this.#menu)) {
-      return
-    }
-    this.close()
-  }
-  #dismissListener = (): void => this.close()
+  #releaseDismissal?: () => void
 
   connectedCallback(): void {
     if (this.shadowRoot) {
@@ -52,9 +47,7 @@ export class ContextMenuLayer extends HTMLElement {
     this.#menu.style.left = `${position.x}px`
     this.#menu.style.top = `${position.y}px`
     this.#items()[0]?.focus()
-    window.addEventListener('pointerdown', this.#outsidePointerListener, true)
-    window.addEventListener('resize', this.#dismissListener)
-    window.addEventListener('blur', this.#dismissListener)
+    this.#releaseDismissal = observePopoverDismissal({ element: this.#menu, onDismiss: () => this.close() })
   }
 
   close(): void {
@@ -69,9 +62,8 @@ export class ContextMenuLayer extends HTMLElement {
   }
 
   #stopListening(): void {
-    window.removeEventListener('pointerdown', this.#outsidePointerListener, true)
-    window.removeEventListener('resize', this.#dismissListener)
-    window.removeEventListener('blur', this.#dismissListener)
+    this.#releaseDismissal?.()
+    this.#releaseDismissal = undefined
   }
 
   #onKeydown(event: KeyboardEvent): void {

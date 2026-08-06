@@ -1,8 +1,18 @@
 import { afterEach, expect, it, vi } from 'vitest'
+import type { ActivitiesOverview } from './activities-overview'
 import type { ContextMenuLayer } from './context-menu/context-menu-layer'
 import { CONTEXT_MENU_EVENT, type ContextMenuDetail } from './context-menu/context-menu-request'
 import './desktop-shell'
 import type { DesktopShell } from './desktop-shell'
+import type { QuickSettingsPanel } from './quick-settings/quick-settings-panel'
+import {
+  BOOT_COMPLETE_EVENT,
+  POWER_ON_REQUESTED_EVENT,
+  type SessionScreen,
+  SHUTDOWN_FADE_COMPLETE_EVENT
+} from './session/session-screen'
+import type { ShutdownDialog } from './session/shutdown-dialog'
+import type { TopBar } from './top-bar'
 
 const mount = () => {
   const desktop = document.createElement('sc-desktop') as DesktopShell
@@ -248,4 +258,143 @@ it('synthesises a contextmenu event on the focused element for the ContextMenu k
   expect(anchored).toBe(true)
   probe.remove()
   expect(desktop.isConnected).toBe(true)
+})
+
+it('opens and closes the quick settings panel from the status button', () => {
+  const shell = mount()
+  const topBar = shell.shadowRoot?.querySelector('sc-top-bar') as TopBar
+  const panel = shell.shadowRoot?.querySelector('sc-quick-settings') as QuickSettingsPanel
+  topBar.statusButton.click()
+  expect(panel.isOpen).toBe(true)
+  expect(topBar.statusButton.getAttribute('aria-expanded')).toBe('true')
+  topBar.statusButton.click()
+  expect(panel.isOpen).toBe(false)
+  expect(topBar.statusButton.getAttribute('aria-expanded')).toBe('false')
+})
+
+it('clears the status button state when the panel dismisses itself', () => {
+  const shell = mount()
+  const topBar = shell.shadowRoot?.querySelector('sc-top-bar') as TopBar
+  const panel = shell.shadowRoot?.querySelector('sc-quick-settings') as QuickSettingsPanel
+  topBar.statusButton.click()
+  document.body.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, composed: true }))
+  expect(panel.isOpen).toBe(false)
+  expect(topBar.statusButton.getAttribute('aria-expanded')).toBe('false')
+})
+
+it('opens the settings app from the quick settings gear', () => {
+  const shell = mount()
+  const topBar = shell.shadowRoot?.querySelector('sc-top-bar') as TopBar
+  const panel = shell.shadowRoot?.querySelector('sc-quick-settings') as QuickSettingsPanel
+  topBar.statusButton.click()
+  panel.shadowRoot?.querySelector<HTMLElement>('[data-action-id="settings"]')?.click()
+  expect(shell.shadowRoot?.querySelector('sc-settings-app')).not.toBeNull()
+  expect(topBar.statusButton.getAttribute('aria-expanded')).toBe('false')
+})
+
+const requestShutdown = (desktop: DesktopShell): ShutdownDialog => {
+  const topBar = desktop.shadowRoot?.querySelector('sc-top-bar') as TopBar
+  const panel = desktop.shadowRoot?.querySelector('sc-quick-settings') as QuickSettingsPanel
+  topBar.statusButton.click()
+  panel.shadowRoot?.querySelector<HTMLElement>('[data-action-id="power"]')?.click()
+  return desktop.shadowRoot?.querySelector('sc-shutdown-dialog') as ShutdownDialog
+}
+
+it('opens the shutdown dialog from the quick settings power button', () => {
+  const shell = mount()
+  const topBar = shell.shadowRoot?.querySelector('sc-top-bar') as TopBar
+  expect(requestShutdown(shell).isOpen).toBe(true)
+  expect(topBar.statusButton.getAttribute('aria-expanded')).toBe('false')
+})
+
+it('leaves the desktop untouched when the shutdown is cancelled', () => {
+  const shell = mount()
+  const screen = shell.shadowRoot?.querySelector('sc-session-screen') as SessionScreen
+  const windowsBefore = shell.shadowRoot?.querySelectorAll('sc-window').length
+  const dialog = requestShutdown(shell)
+  expect(screen.getAttribute('data-phase')).toBe('confirming')
+  dialog.shadowRoot?.querySelector<HTMLButtonElement>('#cancel')?.click()
+  expect(screen.getAttribute('data-phase')).toBe('running')
+  expect(shell.shadowRoot?.querySelectorAll('sc-window')).toHaveLength(windowsBefore ?? 0)
+})
+
+it('closes every window when the shutdown is confirmed', () => {
+  const shell = mount()
+  const screen = shell.shadowRoot?.querySelector('sc-session-screen') as SessionScreen
+  const dialog = requestShutdown(shell)
+  dialog.shadowRoot?.querySelector<HTMLButtonElement>('#confirm')?.click()
+  expect(screen.getAttribute('data-phase')).toBe('shutting-down')
+  expect(shell.shadowRoot?.querySelectorAll('sc-window')).toHaveLength(0)
+})
+
+it('reopens the terminal on a fresh boot', () => {
+  const shell = mount()
+  const screen = shell.shadowRoot?.querySelector('sc-session-screen') as SessionScreen
+  const dialog = requestShutdown(shell)
+  dialog.shadowRoot?.querySelector<HTMLButtonElement>('#confirm')?.click()
+  screen.dispatchEvent(new CustomEvent(SHUTDOWN_FADE_COMPLETE_EVENT, { bubbles: true, composed: true }))
+  expect(screen.getAttribute('data-phase')).toBe('off')
+  screen.dispatchEvent(new CustomEvent(POWER_ON_REQUESTED_EVENT, { bubbles: true, composed: true }))
+  expect(screen.getAttribute('data-phase')).toBe('booting')
+  screen.dispatchEvent(new CustomEvent(BOOT_COMPLETE_EVENT, { bubbles: true, composed: true }))
+  expect(screen.getAttribute('data-phase')).toBe('running')
+  expect(shell.shadowRoot?.querySelectorAll('sc-window')).toHaveLength(1)
+  expect(shell.shadowRoot?.querySelector('sc-terminal-app')).not.toBeNull()
+})
+
+const layerOf = (element: Element): number => Number(getComputedStyle(element).zIndex)
+
+const powerOff = (desktop: DesktopShell): SessionScreen => {
+  const screen = desktop.shadowRoot?.querySelector('sc-session-screen') as SessionScreen
+  const dialog = requestShutdown(desktop)
+  dialog.shadowRoot?.querySelector<HTMLButtonElement>('#confirm')?.click()
+  screen.dispatchEvent(new CustomEvent(SHUTDOWN_FADE_COMPLETE_EVENT, { bubbles: true, composed: true }))
+  return screen
+}
+
+it('paints the session screen above every other overlay', () => {
+  const shell = mount()
+  const screen = shell.shadowRoot?.querySelector('sc-session-screen') as SessionScreen
+  const overview = shell.shadowRoot?.querySelector('sc-overview') as ActivitiesOverview
+  const menuLayer = shell.shadowRoot?.querySelector('sc-context-menu') as HTMLElement
+  const dialog = shell.shadowRoot?.querySelector('sc-shutdown-dialog') as HTMLElement
+  overview.open = true
+  expect(layerOf(screen)).toBeGreaterThan(layerOf(overview))
+  expect(layerOf(screen)).toBeGreaterThan(layerOf(menuLayer))
+  expect(layerOf(screen)).toBeGreaterThan(layerOf(dialog))
+})
+
+it('makes the rest of the desktop inert while powered off', () => {
+  const shell = mount()
+  const screen = powerOff(shell)
+  const overview = shell.shadowRoot?.querySelector('sc-overview') as HTMLElement
+  const topBar = shell.shadowRoot?.querySelector('sc-top-bar') as TopBar
+  expect(overview.inert).toBe(true)
+  expect(topBar.inert).toBe(true)
+  expect(screen.inert).toBe(false)
+})
+
+it('keeps the shutdown dialog interactive while the confirmation is open', () => {
+  const shell = mount()
+  const dialog = requestShutdown(shell)
+  const topBar = shell.shadowRoot?.querySelector('sc-top-bar') as TopBar
+  expect(dialog.inert).toBe(false)
+  expect(topBar.inert).toBe(false)
+})
+
+it('releases the desktop again once the boot completes', () => {
+  const shell = mount()
+  const screen = powerOff(shell)
+  screen.dispatchEvent(new CustomEvent(POWER_ON_REQUESTED_EVENT, { bubbles: true, composed: true }))
+  screen.dispatchEvent(new CustomEvent(BOOT_COMPLETE_EVENT, { bubbles: true, composed: true }))
+  const topBar = shell.shadowRoot?.querySelector('sc-top-bar') as TopBar
+  expect(topBar.inert).toBe(false)
+})
+
+it('takes the status button out of the focus order while powered off', () => {
+  const shell = mount()
+  powerOff(shell)
+  const topBar = shell.shadowRoot?.querySelector('sc-top-bar') as TopBar
+  topBar.statusButton.focus()
+  expect(topBar.shadowRoot?.activeElement).toBeNull()
 })

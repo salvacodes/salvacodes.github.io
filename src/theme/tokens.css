@@ -1,20 +1,34 @@
 :root {
-  --color-bg: #0c0f14;
-  --color-surface: #1b2430;
-  --color-surface-raised: #242e3c;
-  --color-accent: #367bf0;
-  --color-accent-soft: #557c94;
-  --color-text: #d7dde4;
-  --color-text-dim: #8b98a5;
-  --color-border: #323e4e;
+  color-scheme: light dark;
+  --color-bg: light-dark(#f4f5f7, #0c0f14);
+  --color-surface: light-dark(#ffffff, #1b2430);
+  --color-surface-raised: light-dark(#e8ebef, #242e3c);
+  --color-accent: light-dark(#1b5fd0, #367bf0);
+  --color-accent-soft: light-dark(#46647a, #557c94);
+  --color-text: light-dark(#1a1f26, #d7dde4);
+  --color-text-dim: light-dark(#55606d, #8b98a5);
+  --color-border: light-dark(#ccd2da, #323e4e);
+  --color-destructive: light-dark(#b32d1f, #c0392b);
   --color-terminal-bg: #050d07;
   --color-terminal-green: #00ff41;
   --color-terminal-text: #c2f7cd;
   --color-terminal-dim: #52c46e;
+  --wallpaper-glow-a: light-dark(#dfe6f2, #14202e);
+  --wallpaper-glow-b: light-dark(#e7ecf4, #101a26);
+  --wallpaper-gradient-from: light-dark(#f4f5f7, #0c0f14);
+  --wallpaper-gradient-to: light-dark(#e9eef6, #0e1420);
   --font-ui: system-ui, "Cantarell", "Segoe UI", sans-serif;
   --font-mono: ui-monospace, "Fira Code", "Cascadia Mono", monospace;
   --top-bar-height: 32px;
   --title-bar-height: 40px;
+}
+
+:root[data-style="light"] {
+  color-scheme: only light;
+}
+
+:root[data-style="dark"] {
+  color-scheme: only dark;
 }
 
 html,

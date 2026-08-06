@@ -1,6 +1,8 @@
 import { AppRegistry } from './app-registry'
 import './resume/case-study-app'
 import './resume/resume-app'
+import './settings/settings-app'
+import { SETTINGS_ICON_MARKUP } from './settings/settings-icon'
 import './terminal/terminal-app'
 import './writings/writings-app'
 
@@ -31,6 +33,16 @@ export const createAppRegistry = (): AppRegistry => {
     windowTitle: 'Writings',
     initialSize: { width: 900, height: 640 },
     minSize: { width: 380, height: 320 }
+  })
+  registry.register({
+    id: 'settings',
+    name: 'Settings',
+    iconGlyph: '⛭',
+    iconSvg: SETTINGS_ICON_MARKUP,
+    elementTag: 'sc-settings-app',
+    windowTitle: 'Settings',
+    initialSize: { width: 800, height: 560 },
+    minSize: { width: 420, height: 340 }
   })
   registry.register({
     id: 'case-study',

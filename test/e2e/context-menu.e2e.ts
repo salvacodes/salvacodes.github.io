@@ -57,7 +57,7 @@ test.describe('pointer context menus', () => {
   test('a disabled entry does nothing and leaves the menu open', async ({ page }) => {
     await page.goto('/')
     await page.locator('sc-wallpaper').click({ button: 'right', position: { x: 200, y: 300 } })
-    await page.locator(`${menu} [data-item-id="change-background"]`).click({ force: true })
+    await page.locator(`${menu} [data-item-id="display-settings"]`).click({ force: true })
     await expect(page.locator(menu)).toBeVisible()
   })
 
