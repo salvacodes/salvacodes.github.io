@@ -161,28 +161,3 @@ it('keeps a link between posts inside the desktop', async () => {
 
   await vi.waitFor(() => expect(paneText(app)).toContain('Body of the older post.'))
 })
-
-it('gives the post more room as the window grows', async () => {
-  const app = mount('newer')
-  await vi.waitFor(() => expect(paneText(app)).toContain('Body of the newer post.'))
-  const body = app.shadowRoot?.querySelector('.article-body')
-
-  app.style.width = '1400px'
-  const narrow = body?.getBoundingClientRect().width ?? 0
-  app.style.width = '2200px'
-  const wide = body?.getBoundingClientRect().width ?? 0
-
-  expect(narrow).toBeGreaterThan(0)
-  expect(wide).toBeGreaterThan(narrow)
-})
-
-it('keeps the post header and body on the same measure', async () => {
-  const app = mount('newer')
-  await vi.waitFor(() => expect(paneText(app)).toContain('Body of the newer post.'))
-  app.style.width = '1600px'
-
-  const header = app.shadowRoot?.querySelector('.post-header')?.getBoundingClientRect().width ?? 0
-  const body = app.shadowRoot?.querySelector('.article-body')?.getBoundingClientRect().width ?? 0
-
-  expect(body).toBeCloseTo(header, 0)
-})

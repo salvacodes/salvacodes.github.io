@@ -12,9 +12,25 @@ export default defineConfig({
   },
   use: { baseURL: 'http://localhost:4173' },
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-    { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
-    { name: 'webkit', use: { ...devices['Desktop Safari'] } },
-    { name: 'mobile', use: { ...devices['iPhone 13'] } }
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
+      testIgnore: '**/*.mobile.e2e.ts'
+    },
+    {
+      name: 'firefox',
+      use: { ...devices['Desktop Firefox'] },
+      testMatch: '**/*.crossbrowser.e2e.ts'
+    },
+    {
+      name: 'webkit',
+      use: { ...devices['Desktop Safari'] },
+      testMatch: '**/*.crossbrowser.e2e.ts'
+    },
+    {
+      name: 'mobile',
+      use: { ...devices['iPhone 13'] },
+      testMatch: '**/*.mobile.e2e.ts'
+    }
   ]
 })

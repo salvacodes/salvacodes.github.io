@@ -21,16 +21,16 @@ afterEach(() => {
   vi.useRealTimers()
 })
 
-it('is invisible while the session is running', () => {
+it('stays out of sight while the session is running', async () => {
   const screen = mount()
   screen.phase = 'running'
-  expect(getComputedStyle(screen).display).toBe('none')
+  await expect.element(screen).not.toBeVisible()
 })
 
-it('becomes visible while shutting down', () => {
+it('takes over the screen while shutting down', async () => {
   const screen = mount()
   screen.phase = 'shutting-down'
-  expect(getComputedStyle(screen).display).not.toBe('none')
+  await expect.element(screen).toBeVisible()
 })
 
 it('announces when the shutdown fade has finished', () => {

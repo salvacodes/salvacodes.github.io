@@ -12,7 +12,7 @@
     "test:component": "vitest run --project browser",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "test:smoke": "playwright test smoke.e2e.ts",
+    "test:smoke": "playwright test smoke.crossbrowser.e2e.ts",
     "lint": "biome check .",
     "lint:ci": "biome ci .",
     "lint:fix": "biome check --write .",

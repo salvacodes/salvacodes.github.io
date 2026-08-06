@@ -27,16 +27,6 @@ const cleanup = () => {
 const press = (app: HTMLElement, key: string) =>
   inputOf(app).dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }))
 
-const resolveRootColorToken = (tokenName: string): string => {
-  expect(getComputedStyle(document.documentElement).getPropertyValue(tokenName).trim()).not.toBe('')
-  const probe = document.createElement('div')
-  probe.style.color = `var(${tokenName})`
-  document.body.append(probe)
-  const resolvedColor = getComputedStyle(probe).color
-  probe.remove()
-  return resolvedColor
-}
-
 it('boots with the motd scrollback and a live prompt', () => {
   const app = mountTerminal()
   const shadowText = app.shadowRoot?.textContent ?? ''
@@ -83,22 +73,6 @@ it('clicking the terminal focuses the input', () => {
   inputOf(app).blur()
   app.dispatchEvent(new PointerEvent('click', { bubbles: true }))
   expect(app.shadowRoot?.activeElement).toBe(inputOf(app))
-  cleanup()
-})
-
-it('renders consecutive lines without blank gaps, like a real terminal', () => {
-  const app = mountTerminal()
-  const lines = app.shadowRoot!.querySelectorAll('#scrollback > div')
-  const firstLine = lines[0]!.getBoundingClientRect()
-  const secondLine = lines[1]!.getBoundingClientRect()
-  expect(secondLine.top - firstLine.top).toBeLessThan(firstLine.height * 1.5)
-  cleanup()
-})
-
-it('renders the prompt with the terminal green token', () => {
-  const app = mountTerminal()
-  const prompt = app.shadowRoot!.querySelector('.prompt')!
-  expect(getComputedStyle(prompt).color).toBe(resolveRootColorToken('--color-terminal-green'))
   cleanup()
 })
 

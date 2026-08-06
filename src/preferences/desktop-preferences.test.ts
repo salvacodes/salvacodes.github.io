@@ -1,31 +1,21 @@
 import { expect, it, vi } from 'vitest'
+import { fakePreferenceStorage } from '../test-support/fake-preference-storage'
 import { createDesktopPreferences, STYLE_KEY, WALLPAPER_KEY } from './desktop-preferences'
-import type { PreferenceStorage } from './preference-storage'
-
-const fakeStorage = (seed: Record<string, string> = {}): PreferenceStorage => {
-  const entries = new Map(Object.entries(seed))
-  return {
-    read: (key) => entries.get(key),
-    write: (key, value) => {
-      entries.set(key, value)
-    }
-  }
-}
 
 it('defaults to the dark style and the default wallpaper', () => {
-  const preferences = createDesktopPreferences({ storage: fakeStorage() })
+  const preferences = createDesktopPreferences({ storage: fakePreferenceStorage() })
   expect(preferences.getStyle()).toBe('dark')
   expect(preferences.getWallpaper()).toBe('signal')
 })
 
 it('seeds the style from the operating system when nothing is stored', () => {
-  const preferences = createDesktopPreferences({ storage: fakeStorage(), prefersLight: () => true })
+  const preferences = createDesktopPreferences({ storage: fakePreferenceStorage(), prefersLight: () => true })
   expect(preferences.getStyle()).toBe('light')
 })
 
 it('prefers an explicit stored choice over the operating system', () => {
   const preferences = createDesktopPreferences({
-    storage: fakeStorage({ [STYLE_KEY]: 'dark' }),
+    storage: fakePreferenceStorage({ [STYLE_KEY]: 'dark' }),
     prefersLight: () => true
   })
   expect(preferences.getStyle()).toBe('dark')
@@ -33,26 +23,26 @@ it('prefers an explicit stored choice over the operating system', () => {
 
 it('falls back to defaults when the stored values are not in the allowlist', () => {
   const preferences = createDesktopPreferences({
-    storage: fakeStorage({ [STYLE_KEY]: 'solarized', [WALLPAPER_KEY]: 'url(https://evil.example/x.png)' })
+    storage: fakePreferenceStorage({ [STYLE_KEY]: 'solarized', [WALLPAPER_KEY]: 'url(https://evil.example/x.png)' })
   })
   expect(preferences.getStyle()).toBe('dark')
   expect(preferences.getWallpaper()).toBe('signal')
 })
 
 it('persists a new style so a later store reads it back', () => {
-  const storage = fakeStorage()
+  const storage = fakePreferenceStorage()
   createDesktopPreferences({ storage }).setStyle('light')
   expect(createDesktopPreferences({ storage }).getStyle()).toBe('light')
 })
 
 it('persists a new wallpaper so a later store reads it back', () => {
-  const storage = fakeStorage()
+  const storage = fakePreferenceStorage()
   createDesktopPreferences({ storage }).setWallpaper('grid')
   expect(createDesktopPreferences({ storage }).getWallpaper()).toBe('grid')
 })
 
 it('notifies subscribers when a preference changes', () => {
-  const preferences = createDesktopPreferences({ storage: fakeStorage() })
+  const preferences = createDesktopPreferences({ storage: fakePreferenceStorage() })
   const listener = vi.fn()
   preferences.subscribe(listener)
   preferences.setStyle('light')
@@ -61,7 +51,7 @@ it('notifies subscribers when a preference changes', () => {
 })
 
 it('stops notifying after unsubscribe', () => {
-  const preferences = createDesktopPreferences({ storage: fakeStorage() })
+  const preferences = createDesktopPreferences({ storage: fakePreferenceStorage() })
   const listener = vi.fn()
   preferences.subscribe(listener)()
   preferences.setStyle('light')
@@ -69,7 +59,7 @@ it('stops notifying after unsubscribe', () => {
 })
 
 it('does not notify when the value is unchanged', () => {
-  const preferences = createDesktopPreferences({ storage: fakeStorage() })
+  const preferences = createDesktopPreferences({ storage: fakePreferenceStorage() })
   const listener = vi.fn()
   preferences.subscribe(listener)
   preferences.setStyle('dark')

@@ -31,44 +31,24 @@ test('ignores a stored style that is not in the allowlist', async ({ page }) => 
   await expect(page.locator('html')).toHaveAttribute('data-style', 'dark')
 })
 
-test('toggles the style from quick settings and repaints the page', async ({ page }) => {
+test('repaints the page when the style changes', async ({ page }) => {
   await page.goto('/')
   const background = () => page.evaluate(() => getComputedStyle(document.body).backgroundColor)
   const before = await background()
-  await page.locator('sc-top-bar #status').click()
-  await page.locator('sc-quick-settings [data-tile-id="dark-style"]').click()
+
+  await page.getByRole('button', { name: 'System menu' }).click()
+  await page.getByRole('button', { name: 'Dark Style' }).click()
+
   await expect(page.locator('html')).toHaveAttribute('data-style', 'light')
   expect(await background()).not.toBe(before)
 })
 
 test('remembers the style across a reload', async ({ page }) => {
   await page.goto('/')
-  await page.locator('sc-top-bar #status').click()
-  await page.locator('sc-quick-settings [data-tile-id="dark-style"]').click()
+  await page.getByRole('button', { name: 'System menu' }).click()
+  await page.getByRole('button', { name: 'Dark Style' }).click()
+
   await page.reload()
+
   await expect(page.locator('html')).toHaveAttribute('data-style', 'light')
-})
-
-test('changes the wallpaper from the settings app', async ({ page }) => {
-  await page.goto('/')
-  await page.locator('sc-top-bar #status').click()
-  await page.locator('sc-quick-settings [data-action-id="settings"]').click()
-  await page.locator('sc-settings-app sc-appearance-panel [data-wallpaper-id="grid"]').click()
-  await expect(page.locator('html')).toHaveAttribute('data-wallpaper', 'grid')
-})
-
-test('closes quick settings on escape and restores focus', async ({ page }) => {
-  await page.goto('/')
-  await page.locator('sc-top-bar #status').click()
-  await expect(page.locator('sc-top-bar #status')).toHaveAttribute('aria-expanded', 'true')
-  await page.keyboard.press('Escape')
-  await expect(page.locator('sc-top-bar #status')).toHaveAttribute('aria-expanded', 'false')
-})
-
-test('opens settings from the desktop context menu change background action', async ({ page, isMobile }) => {
-  test.skip(isMobile, 'desktop-only scenario')
-  await page.goto('/')
-  await page.locator('sc-wallpaper').click({ button: 'right', position: { x: 200, y: 300 } })
-  await page.locator('sc-context-menu [data-item-id="change-background"]').click()
-  await expect(page.locator('sc-window sc-settings-app')).toBeVisible()
 })

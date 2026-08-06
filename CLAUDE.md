@@ -43,7 +43,58 @@ The website must look and feel like a Kali Linux desktop running Gnome — not l
 ## Development workflow
 
 - Follow strict TDD: write a failing test first, implement the minimum code to make it pass, then look for refactoring opportunities to apply clean code practices. Do not write implementation code before a failing test exists for it.
-- In tests, never assert literal style values copied from a stylesheet (exact hex colors, pixel sizes) — they only fail on intentional edits. Assert the contract or invariant instead: a token is defined, a computed style equals the runtime-resolved token, a layout relationship holds. Asserting a single property that encodes a deliberate UX decision (e.g. `outline: none` on focused windows) is fine.
+
+## Testing policy
+
+The suite exists to catch behaviour a visitor would notice breaking. Tests that fail only when someone
+intentionally changes a design or an internal name are a liability — they cost time and teach the team
+to ignore red. These rules are what keep the suite small, fast and trustworthy.
+
+**Write a test only if it can fail for a reason a visitor would notice.** Before adding one, ask what
+production change turns it red. If the only answer is "an intentional visual or structural edit", do
+not write it.
+
+| Assert this | Not this |
+|---|---|
+| The close button closes the window | `shadowRoot.querySelector('#close')` exists |
+| Text stays readable (contrast ≥ 4.5) | `--color-accent` is defined, or equals a value |
+| A window stays reachable after being dragged off-screen | `geometry.x === -544` |
+| The desktop menu offers *Open Terminal* first | The motif is painted with `var(--color-accent)` |
+| The post opens when its link is clicked | The post body and header share a `max-width` |
+
+- **Never assert appearance.** No colours, font sizes, spacing, line boxes, icon shapes, element counts
+  in a catalogue, or "this CSS string contains this selector". Asserting a single property that encodes
+  a deliberate UX decision (e.g. `outline: none` on focused windows) is the one exception.
+- **Never assert literal style values copied from a stylesheet.** Assert the contract or invariant
+  instead: a computed style equals the runtime-resolved token, or a layout relationship holds.
+- **Never assert transient visual state** — `:hover`, `:focus-visible`, mid-transition opacity,
+  animation frames. Assert the state attribute the component sets (`data-phase`, `aria-expanded`,
+  `aria-current`) or use a visibility matcher.
+
+**Reach elements the way a user does.** Queries go through `page.getByRole(...)` / accessible name (the
+locators pierce open shadow roots). Ids, class names and `data-*` hooks inside a shadow root are
+internal — a test that names them breaks on a pure refactor. Custom element tag names (`sc-window`) are
+public API and may be used. Where a surface has no accessible name at all — resize handles, drag
+targets — address it semantically (`header`, `[data-direction]`) from within that component's own test.
+
+Reuse `src/test-support/`: `mountDesktop()` for the composed desktop, `mount()` for a single element
+with automatic teardown, `fakePreferenceStorage()` for preferences. Add to the driver rather than
+reaching into a shadow root from a test.
+
+**One behaviour, one level.** A behaviour proven lower down is not re-proven higher up.
+
+- *unit* — pure logic, no DOM (`window-manager`, `session-state`, `post-collection`, `frontmatter`).
+- *browser (component)* — one custom element, or the composed shell, in a real browser.
+- *e2e* — only what needs the built site: drag/resize physics, the address bar, no-JS prerendering,
+  CSP, the Atom feed, real files, cross-browser rendering.
+
+**No skipped tests, ever.** Do not use `test.skip`. Playwright projects select specs by filename:
+`*.e2e.ts` runs on chromium, `*.mobile.e2e.ts` on the mobile project, `*.crossbrowser.e2e.ts` on
+chromium plus firefox and webkit. Put a spec where it belongs instead of skipping it at runtime.
+
+**Deleting a test is a decision that must be justified.** When you remove one, name the surviving test
+that covers the behaviour, or state explicitly that the behaviour is not worth guarding. Record it in
+`docs/test-suite-audit.md`.
 
 ## Code style
 

@@ -1,8 +1,7 @@
 import { expect, it } from 'vitest'
 import { DEFAULT_WALLPAPER, isWallpaperId, toWallpaperId, WALLPAPERS } from './wallpaper-catalog'
 
-it('offers four wallpapers, each with a label', () => {
-  expect(WALLPAPERS).toHaveLength(4)
+it('gives every wallpaper a label', () => {
   for (const wallpaper of WALLPAPERS) {
     expect(wallpaper.label.length).toBeGreaterThan(0)
   }

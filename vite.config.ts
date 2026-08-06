@@ -50,6 +50,7 @@ export default defineConfig({
             headless: true,
             screenshotDirectory: 'test-results/screenshots',
             provider: playwright(),
+            viewport: { width: 1280, height: 800 },
             instances: [{ browser: 'chromium' }]
           }
         }

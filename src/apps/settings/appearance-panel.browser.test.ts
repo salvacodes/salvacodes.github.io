@@ -1,78 +1,69 @@
-import { afterEach, expect, it } from 'vitest'
+import { expect, it } from 'vitest'
+import { page } from 'vitest/browser'
 import { createDesktopPreferences } from '../../preferences/desktop-preferences'
-import type { PreferenceStorage } from '../../preferences/preference-storage'
+import { WALLPAPERS } from '../../preferences/wallpaper-catalog'
+import { fakePreferenceStorage } from '../../test-support/fake-preference-storage'
+import { mount } from '../../test-support/mount'
 import './appearance-panel'
 import type { AppearancePanel } from './appearance-panel'
 
-const fakeStorage = (): PreferenceStorage => {
-  const entries = new Map<string, string>()
-  return {
-    read: (key) => entries.get(key),
-    write: (key, value) => {
-      entries.set(key, value)
-    }
-  }
-}
+const mountPanel = (): AppearancePanel =>
+  mount<AppearancePanel>('sc-appearance-panel', {
+    preferences: createDesktopPreferences({ storage: fakePreferenceStorage() })
+  })
 
-const mount = (): AppearancePanel => {
-  const panel = document.createElement('sc-appearance-panel') as AppearancePanel
-  panel.preferences = createDesktopPreferences({ storage: fakeStorage() })
-  document.body.append(panel)
-  return panel
-}
+const styleGroup = () => page.getByRole('radiogroup', { name: 'Style' })
 
-afterEach(() => {
-  for (const element of document.querySelectorAll('sc-appearance-panel')) {
-    element.remove()
-  }
-})
+const style = (name: string) => styleGroup().getByRole('radio', { name })
 
-it('offers the two styles as a radio group', () => {
-  const panel = mount()
-  const group = panel.shadowRoot?.querySelector('[role="radiogroup"]')
-  expect(group?.getAttribute('aria-label')).toBe('Style')
-  expect(panel.shadowRoot?.querySelectorAll('[role="radio"]')).toHaveLength(2)
+const wallpaper = (name: string) => page.getByRole('button', { name })
+
+it('offers every style as a radio in a labelled group', () => {
+  mountPanel()
+  expect(styleGroup().getByRole('radio').elements().length).toBe(2)
 })
 
 it('marks the current style as checked', () => {
-  const panel = mount()
-  expect(panel.shadowRoot?.querySelector('[data-style-id="dark"]')?.getAttribute('aria-checked')).toBe('true')
-  expect(panel.shadowRoot?.querySelector('[data-style-id="light"]')?.getAttribute('aria-checked')).toBe('false')
+  mountPanel()
+  expect(style('Dark').element().getAttribute('aria-checked')).toBe('true')
+  expect(style('Light').element().getAttribute('aria-checked')).toBe('false')
 })
 
-it('changes the style when a swatch is chosen', () => {
-  const panel = mount()
-  panel.shadowRoot?.querySelector<HTMLElement>('[data-style-id="light"]')?.click()
+it('changes the style when a swatch is chosen', async () => {
+  const panel = mountPanel()
+
+  await style('Light').click()
+
   expect(panel.preferences.getStyle()).toBe('light')
-  expect(panel.shadowRoot?.querySelector('[data-style-id="light"]')?.getAttribute('aria-checked')).toBe('true')
+  expect(style('Light').element().getAttribute('aria-checked')).toBe('true')
 })
 
 it('offers every wallpaper in the catalog', () => {
-  const panel = mount()
-  expect(panel.shadowRoot?.querySelectorAll('[data-wallpaper-id]')).toHaveLength(4)
-})
-
-it('renders each thumbnail as the real wallpaper surface', () => {
-  const panel = mount()
-  const thumbnail = panel.shadowRoot?.querySelector('[data-wallpaper-id="dragon"] .surface') as HTMLElement
-  expect(thumbnail.dataset.variant).toBe('dragon')
+  mountPanel()
+  for (const candidate of WALLPAPERS) {
+    expect(wallpaper(candidate.label).elements(), `${candidate.label} should be offered`).toHaveLength(1)
+  }
 })
 
 it('marks the current wallpaper as pressed', () => {
-  const panel = mount()
-  expect(panel.shadowRoot?.querySelector('[data-wallpaper-id="signal"]')?.getAttribute('aria-pressed')).toBe('true')
+  mountPanel()
+  expect(wallpaper('Signal').element().getAttribute('aria-pressed')).toBe('true')
 })
 
-it('changes the wallpaper when a thumbnail is chosen', () => {
-  const panel = mount()
-  panel.shadowRoot?.querySelector<HTMLElement>('[data-wallpaper-id="grid"]')?.click()
+it('changes the wallpaper when a thumbnail is chosen', async () => {
+  const panel = mountPanel()
+
+  await wallpaper('Grid').click()
+
   expect(panel.preferences.getWallpaper()).toBe('grid')
-  expect(panel.shadowRoot?.querySelector('[data-wallpaper-id="grid"]')?.getAttribute('aria-pressed')).toBe('true')
-  expect(panel.shadowRoot?.querySelector('[data-wallpaper-id="signal"]')?.getAttribute('aria-pressed')).toBe('false')
+  expect(wallpaper('Grid').element().getAttribute('aria-pressed')).toBe('true')
+  expect(wallpaper('Signal').element().getAttribute('aria-pressed')).toBe('false')
 })
 
 it('follows a change made elsewhere', () => {
-  const panel = mount()
+  const panel = mountPanel()
+
   panel.preferences.setStyle('light')
-  expect(panel.shadowRoot?.querySelector('[data-style-id="light"]')?.getAttribute('aria-checked')).toBe('true')
+
+  expect(style('Light').element().getAttribute('aria-checked')).toBe('true')
 })
