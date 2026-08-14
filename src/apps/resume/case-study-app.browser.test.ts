@@ -4,6 +4,7 @@ import { CONTEXT_MENU_EVENT, type ContextMenuDetail } from '../../desktop/contex
 import { LONG_PRESS_DURATION_MS } from '../../desktop/context-menu/long-press'
 import './case-study-app'
 import { resumeContent } from './resume-content'
+import type { CaseStudy } from './resume-model'
 
 const mount = (studyId?: string) => {
   const app = document.createElement('sc-case-study-app')
@@ -12,6 +13,28 @@ const mount = (studyId?: string) => {
   }
   document.body.append(app)
   return app
+}
+
+const buildStudy = (overrides: Partial<CaseStudy>): CaseStudy => ({
+  id: 'chronology-test-study',
+  title: 'A constructed study',
+  problem: 'A problem worth studying.',
+  constraint: 'A constraint worth naming.',
+  decisions: ['A decision.'],
+  outcome: 'An outcome.',
+  reflection: 'A reflection.',
+  evidence: [],
+  redactions: ['Client identity'],
+  ...overrides
+})
+
+const withCaseStudy = (study: CaseStudy, run: (app: HTMLElement) => void): void => {
+  resumeContent.caseStudies.push(study)
+  try {
+    run(mount(study.id))
+  } finally {
+    resumeContent.caseStudies.pop()
+  }
 }
 
 afterEach(() => {
@@ -23,8 +46,7 @@ it('renders the requested case study', () => {
   const app = mount(study.id)
   const text = app.shadowRoot?.textContent ?? ''
   expect(text).toContain(study.title)
-  expect(text).toContain(study.sector)
-  expect(text).toContain(study.scale)
+  expect(text).toContain(study.problem)
   expect(text).toContain(study.constraint)
 })
 
@@ -49,11 +71,26 @@ it('renders the outcome text', () => {
   expect(app.shadowRoot?.querySelector('.outcome')?.textContent).toBe(study.outcome)
 })
 
+it('renders the reflection text', () => {
+  const study = resumeContent.caseStudies[0]!
+  const app = mount(study.id)
+  expect(app.shadowRoot?.querySelector('.reflection')?.textContent).toBe(study.reflection)
+})
+
 it('renders the withheld-items heading', () => {
   const study = resumeContent.caseStudies[0]!
   const app = mount(study.id)
   const headings = [...(app.shadowRoot?.querySelectorAll('.section-heading') ?? [])].map((el) => el.textContent)
-  expect(headings).toContain('Withheld under NDA')
+  expect(headings).toContain('Withheld')
+})
+
+it('marks a placeholder case study as draft, and leaves a written one unmarked', () => {
+  withCaseStudy(buildStudy({ id: 'draft-chronology-test-study', isPlaceholder: true }), (app) => {
+    expect(app.shadowRoot?.querySelector('.draft')).not.toBeNull()
+  })
+  withCaseStudy(buildStudy({ id: 'written-chronology-test-study' }), (app) => {
+    expect(app.shadowRoot?.querySelector('.draft')).toBeNull()
+  })
 })
 
 it('shows a not-found state for an unknown study instead of throwing', () => {

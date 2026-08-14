@@ -2,6 +2,7 @@ import { afterEach, expect, it } from 'vitest'
 import { CONTEXT_MENU_EVENT, type ContextMenuDetail } from '../../desktop/context-menu/context-menu-request'
 import { PRINT_DOCUMENT_EVENT } from '../../desktop/print-surface'
 import '../../theme/tokens.css'
+import { resumeContent } from './resume-content'
 import './resume-app'
 import type { ResumeApp } from './resume-app'
 
@@ -30,9 +31,11 @@ afterEach(() => {
 it('lists the available sections in the sidebar', () => {
   const app = mount()
   expect(sidebarButtons(app).map((button) => button.dataset.sectionId)).toEqual([
+    'profile',
     'career',
     'skills',
     'case-studies',
+    'credentials',
     'site'
   ])
 })
@@ -41,13 +44,13 @@ it('opens on the career timeline', () => {
   const app = mount()
   const selected = shadow(app).querySelector('.sidebar button[aria-current="page"]')
   expect(selected?.getAttribute('data-section-id')).toBe('career')
-  expect(shadow(app).querySelectorAll('.pane details.stage').length).toBeGreaterThan(0)
+  expect(shadow(app).querySelectorAll('.pane details.occupation').length).toBeGreaterThan(0)
 })
 
 it('swaps the pane when another section is selected', () => {
   const app = mount()
   selectSection(app, 'skills')
-  expect(shadow(app).querySelector('.pane details.stage')).toBeNull()
+  expect(shadow(app).querySelector('.pane details.occupation')).toBeNull()
   expect(shadow(app).querySelector('.pane .skill-group')).not.toBeNull()
 })
 
@@ -59,23 +62,25 @@ it('marks the selected sidebar entry as current', () => {
   expect(current[0]?.getAttribute('data-section-id')).toBe('site')
 })
 
-it('an evidence chip navigates to its stage and expands it', () => {
+it('an evidence chip navigates to its occupation and expands it', () => {
   const app = mount()
   selectSection(app, 'skills')
   const chip = shadow(app).querySelector<HTMLButtonElement>('.evidence-chip')!
-  const stageId = chip.dataset.stageId!
+  const occupationId = chip.dataset.occupationId!
   chip.click()
   const selected = shadow(app).querySelector('.sidebar button[aria-current="page"]')
   expect(selected?.getAttribute('data-section-id')).toBe('career')
-  const stage = shadow(app).querySelector<HTMLDetailsElement>(`details.stage[data-stage-id="${stageId}"]`)!
-  expect(stage.open).toBe(true)
+  const occupation = shadow(app).querySelector<HTMLDetailsElement>(
+    `details.occupation[data-occupation-id="${occupationId}"]`
+  )!
+  expect(occupation.open).toBe(true)
 })
 
-it('leaves the other stages collapsed when navigating from a chip', () => {
+it('leaves the other occupations collapsed when navigating from a chip', () => {
   const app = mount()
   selectSection(app, 'skills')
   shadow(app).querySelector<HTMLButtonElement>('.evidence-chip')!.click()
-  const expanded = [...shadow(app).querySelectorAll<HTMLDetailsElement>('details.stage')].filter((s) => s.open)
+  const expanded = [...shadow(app).querySelectorAll<HTMLDetailsElement>('details.occupation')].filter((s) => s.open)
   expect(expanded).toHaveLength(1)
 })
 
@@ -94,11 +99,20 @@ it('requests a case study window when an opener is clicked', () => {
 
 it('omits a section with no entries from the sidebar', () => {
   const app = mount()
-  const emptyContent = { stages: [], skills: [], caseStudies: [], site: { posture: [], repoUrl: 'https://x.test' } }
+  const emptyContent = {
+    profile: resumeContent.profile,
+    tenures: [],
+    gaps: [],
+    skills: [],
+    caseStudies: [],
+    education: [],
+    languages: [],
+    site: { posture: [], repoUrl: 'https://x.test' }
+  }
   ;(app as ResumeApp).content = emptyContent
-  expect(sidebarButtons(app).map((button) => button.dataset.sectionId)).toEqual(['site'])
+  expect(sidebarButtons(app).map((button) => button.dataset.sectionId)).toEqual(['profile', 'site'])
   const selected = shadow(app).querySelector('.sidebar button[aria-current="page"]')
-  expect(selected?.getAttribute('data-section-id')).toBe('site')
+  expect(selected?.getAttribute('data-section-id')).toBe('profile')
 })
 
 it('offers a print action that emits a printable document', () => {

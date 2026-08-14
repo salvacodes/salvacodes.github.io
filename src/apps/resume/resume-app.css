@@ -68,12 +68,77 @@
   overflow-y: auto;
 }
 
-.stage {
+.tenure {
+  margin-bottom: 24px;
   border-bottom: 1px solid var(--color-border);
+  padding-bottom: 16px;
+}
+
+.tenure header {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 12px;
+  margin-bottom: 10px;
+}
+
+.tenure-org {
+  margin: 0;
+  font-weight: 600;
+  font-size: 1.05em;
+}
+
+.tenure-period {
+  color: var(--color-text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.tenure-org-shape {
+  grid-column: 1 / -1;
+  color: var(--color-text-dim);
+  font-size: 0.9em;
+}
+
+.grade-track {
+  display: flex;
+  gap: 2px;
+  margin: 10px 0 14px;
+  border-top: 2px solid var(--color-accent);
+  border-radius: 2px;
+}
+
+.grade {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  padding: 6px 10px 0;
+  border-left: 1px solid var(--color-border);
+}
+
+.grade:first-child {
+  border-left: 0;
+}
+
+.grade-title {
+  color: var(--color-accent-soft);
+  font-size: 0.8em;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.grade-period {
+  color: var(--color-text-dim);
+  font-size: 0.8em;
+  font-variant-numeric: tabular-nums;
+}
+
+.occupation {
+  border-top: 1px solid var(--color-border);
   padding: 10px 0;
 }
 
-.stage summary {
+.occupation summary {
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 2px 12px;
@@ -81,32 +146,39 @@
   list-style: none;
 }
 
-.stage summary::-webkit-details-marker {
+.occupation summary::-webkit-details-marker {
   display: none;
 }
 
-.stage-title {
+.occupation-title {
   font-weight: 600;
 }
 
-.stage-period {
+.occupation-period {
   color: var(--color-text-dim);
   font-variant-numeric: tabular-nums;
 }
 
-.stage-org {
-  grid-column: 1 / -1;
-  color: var(--color-text-dim);
-  font-size: 0.9em;
-}
-
-.stage-narrative {
+.occupation-summary {
   margin: 10px 0;
   max-width: 70ch;
   line-height: 1.6;
 }
 
-.stage-stack,
+.occupation-narrative {
+  margin: 10px 0;
+  max-width: 70ch;
+  line-height: 1.6;
+}
+
+.career-gap {
+  margin: 4px 0 24px;
+  color: var(--color-text-dim);
+  font-size: 0.9em;
+  font-style: italic;
+}
+
+.occupation-stack,
 .skill-evidence {
   display: flex;
   flex-wrap: wrap;
@@ -187,8 +259,7 @@
   font-weight: 600;
 }
 
-.case-study-sector,
-.case-study-scale {
+.case-study-problem {
   color: var(--color-text-dim);
   font-size: 0.85em;
 }
@@ -202,6 +273,75 @@
 
 .repo-link {
   color: var(--color-accent);
+}
+
+.profile-name {
+  margin: 0 0 4px;
+  font-size: 1.4em;
+  font-weight: 600;
+}
+
+.profile-headline {
+  margin: 0 0 16px;
+  color: var(--color-accent-soft);
+}
+
+.profile-summary {
+  margin: 0 0 16px;
+  max-width: 70ch;
+  line-height: 1.6;
+}
+
+.profile-location {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--color-text-dim);
+}
+
+.profile-email {
+  display: block;
+  margin-bottom: 12px;
+  color: var(--color-accent);
+}
+
+.profile-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.profile-link {
+  color: var(--color-accent);
+}
+
+.credentials-heading {
+  margin: 18px 0 8px;
+  color: var(--color-accent-soft);
+  font-size: 0.8em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.education-entry,
+.language-entry {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  padding: 6px 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.education-degree,
+.language-name {
+  min-width: 14ch;
+  font-weight: 600;
+}
+
+.education-institution,
+.education-field,
+.language-level {
+  color: var(--color-text-dim);
 }
 
 :host([compact]) {

@@ -14,6 +14,16 @@
   font-size: 1.25em;
 }
 
+.draft {
+  border: 1px dashed var(--color-accent-soft);
+  border-radius: 4px;
+  padding: 0 6px;
+  color: var(--color-accent-soft);
+  font-size: 0.7em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .facts {
   display: grid;
   grid-template-columns: max-content 1fr;
@@ -41,8 +51,14 @@
 }
 
 .decision,
-.outcome {
+.outcome,
+.reflection {
   max-width: 70ch;
+}
+
+.reflection {
+  color: var(--color-text-dim);
+  font-style: italic;
 }
 
 .redaction {

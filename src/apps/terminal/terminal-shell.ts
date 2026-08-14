@@ -1,4 +1,5 @@
 import { POST_SLUG_PARAM, WRITINGS_APP_ID } from '../../routing/post-route'
+import { resumeContent } from '../resume/resume-content'
 import { homeDirectory } from './home-directory'
 
 export interface ShellResult {
@@ -38,7 +39,7 @@ export class TerminalShell {
     {
       name: 'whoami',
       description: 'who is behind this desktop',
-      execute: () => output('Salva — cyber security engineering lead')
+      execute: () => output(`Salva — ${resumeContent.profile.headline}`)
     },
     {
       name: 'resume',

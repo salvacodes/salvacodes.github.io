@@ -6,13 +6,13 @@ const openResumeFromDock = async (page: import('@playwright/test').Page) => {
   return page.locator('sc-window', { has: page.locator('sc-resume-app') })
 }
 
-test('opens the resume from the dock and expands a stage', async ({ page }) => {
+test('opens the resume from the dock and expands an occupation', async ({ page }) => {
   const resumeWindow = await openResumeFromDock(page)
   await expect(resumeWindow).toBeVisible()
-  const firstStage = page.locator('sc-resume-app details.stage').first()
-  await expect(firstStage).toHaveJSProperty('open', false)
-  await firstStage.locator('summary').click()
-  await expect(firstStage).toHaveJSProperty('open', true)
+  const firstOccupation = page.locator('sc-resume-app details.occupation').first()
+  await expect(firstOccupation).toHaveJSProperty('open', false)
+  await firstOccupation.locator('summary').click()
+  await expect(firstOccupation).toHaveJSProperty('open', true)
 })
 
 test('the terminal resume command opens the app', async ({ page }) => {
@@ -21,15 +21,6 @@ test('the terminal resume command opens the app', async ({ page }) => {
   await input.fill('resume')
   await input.press('Enter')
   await expect(page.locator('sc-resume-app')).toBeVisible()
-})
-
-test('an evidence chip jumps to the career stage it cites', async ({ page }) => {
-  await openResumeFromDock(page)
-  await page.locator('sc-resume-app .sidebar button[data-section-id="skills"]').click()
-  const chip = page.locator('sc-resume-app .evidence-chip').first()
-  const stageId = await chip.getAttribute('data-stage-id')
-  await chip.click()
-  await expect(page.locator(`sc-resume-app details.stage[data-stage-id="${stageId}"]`)).toHaveJSProperty('open', true)
 })
 
 test('case studies open as their own windows', async ({ page }) => {
@@ -52,5 +43,7 @@ test('printing hides the desktop and lays out the resume on paper', async ({ pag
   await expect(page.locator('#print-surface')).toBeVisible()
   await expect(page.locator('sc-desktop')).toBeHidden()
   await expect(page.locator('#print-surface .print-footer')).toContainText('salva.codes')
+  await expect(page.locator('#print-surface .print-name')).toContainText('Salvador')
+  await expect(page.locator('#print-surface .print-tenure')).not.toHaveCount(0)
   await page.emulateMedia({ media: 'screen' })
 })

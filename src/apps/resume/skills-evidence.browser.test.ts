@@ -1,36 +1,51 @@
 import { afterEach, expect, it } from 'vitest'
-import type { CareerStage, Skill } from './resume-model'
+import type { Skill, Tenure } from './resume-model'
 import { renderSkillsEvidence } from './skills-evidence'
 
-const stages: CareerStage[] = [
+const tenures: Tenure[] = [
   {
-    id: 'tech-lead',
-    title: 'Tech Lead',
-    period: { start: '2018-06', end: '2022-01' },
-    orgShape: 'Delivery team',
-    stack: [],
-    summary: '',
-    narrative: ''
-  },
-  {
-    id: 'security-lead',
-    title: 'Engineering Lead',
-    period: { start: '2026-03' },
-    orgShape: 'Security team',
-    stack: [],
-    summary: '',
-    narrative: ''
+    id: 'consultancy',
+    org: 'Consultancy',
+    orgShape: 'Global technology consultancy',
+    period: { start: '2018-06' },
+    occupations: [
+      {
+        id: 'tech-lead-first',
+        title: 'Tech Lead',
+        period: { start: '2018-06', end: '2022-01' },
+        summary: 'Led a team.',
+        stack: []
+      },
+      {
+        id: 'tech-lead-second',
+        title: 'Tech Lead',
+        period: { start: '2022-12', end: '2024-04' },
+        summary: 'Led another team.',
+        stack: []
+      },
+      {
+        id: 'security-lead',
+        title: 'Engineering Lead',
+        period: { start: '2025-10' },
+        summary: 'Leads security engineering.',
+        stack: []
+      }
+    ]
   }
 ]
 
 const skills: Skill[] = [
-  { name: 'Technical Leadership', category: 'Leadership', evidence: ['tech-lead', 'security-lead'] },
+  {
+    name: 'Technical Leadership',
+    category: 'Leadership',
+    evidence: ['tech-lead-first', 'tech-lead-second', 'security-lead']
+  },
   { name: 'Threat Modelling', category: 'Security', evidence: ['security-lead'], isPlaceholder: true }
 ]
 
 const mount = () => {
   const host = document.createElement('div')
-  host.append(renderSkillsEvidence(skills, stages))
+  host.append(renderSkillsEvidence(skills, tenures))
   document.body.append(host)
   return host
 }
@@ -46,9 +61,7 @@ it('groups skills under their category', () => {
     'Leadership',
     'Security'
   ])
-  const firstGroup = groups[0]!
-  expect(firstGroup.querySelector('.skill')).not.toBeNull()
-  expect(firstGroup.querySelector('.skill-name')).toHaveTextContent('Technical Leadership')
+  expect(groups[0]?.querySelector('.skill-name')).toHaveTextContent('Technical Leadership')
 })
 
 it('renders no rating or score for any skill', () => {
@@ -58,19 +71,37 @@ it('renders no rating or score for any skill', () => {
   expect(host.textContent).not.toContain('★')
 })
 
-it('renders an evidence chip per cited stage, labelled with the stage title', () => {
+it('renders one chip per cited occupation, citing the occupation id', () => {
   const host = mount()
   const chips = host.querySelectorAll<HTMLButtonElement>(
     '.skill-group:first-of-type .skill:first-of-type .evidence-chip'
   )
-  expect([...chips].map((chip) => chip.textContent)).toEqual(['Tech Lead', 'Engineering Lead'])
-  expect([...chips].map((chip) => chip.dataset.stageId)).toEqual(['tech-lead', 'security-lead'])
+  expect([...chips].map((chip) => chip.dataset.occupationId)).toEqual([
+    'tech-lead-first',
+    'tech-lead-second',
+    'security-lead'
+  ])
+})
+
+it('distinguishes two occupations that share a title by their period', () => {
+  const host = mount()
+  const chips = host.querySelectorAll('.skill-group:first-of-type .skill:first-of-type .evidence-chip')
+  const labels = [...chips].map((chip) => chip.textContent)
+  expect(new Set(labels).size).toBe(labels.length)
+  expect(labels[0]).toContain('Tech Lead')
+  expect(labels[0]).toContain('Jun 2018')
+})
+
+it('drops a chip whose occupation no longer exists', () => {
+  const host = document.createElement('div')
+  host.append(renderSkillsEvidence([{ name: 'Ghost', category: 'Other', evidence: ['retired'] }], tenures))
+  document.body.append(host)
+  expect(host.querySelectorAll('.evidence-chip')).toHaveLength(0)
 })
 
 it('makes evidence chips activatable controls', () => {
   const host = mount()
-  const chip = host.querySelector('.evidence-chip')!
-  expect(chip.tagName).toBe('BUTTON')
+  expect(host.querySelector('.evidence-chip')?.tagName).toBe('BUTTON')
 })
 
 it('marks placeholder skills as draft', () => {

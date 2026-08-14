@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { resumeContent } from '../resume/resume-content'
 import { TerminalShell } from './terminal-shell'
 
 const shell = () => new TerminalShell()
@@ -23,7 +24,7 @@ describe('running input lines', () => {
 
 describe('identity and system commands', () => {
   it('whoami introduces Salva', () => {
-    expect(shell().run('whoami').lines).toEqual(['Salva — cyber security engineering lead'])
+    expect(shell().run('whoami').lines).toEqual([`Salva — ${resumeContent.profile.headline}`])
   })
 
   it('sudo denies politely', () => {
@@ -53,11 +54,6 @@ describe('the home directory', () => {
   it('cat prints a file line by line', () => {
     const files = { 'notes.txt': 'first\nsecond' }
     expect(new TerminalShell(files).run('cat notes.txt').lines).toEqual(['first', 'second'])
-  })
-
-  it('cat resume.txt previews the career path', () => {
-    const lines = shell().run('cat resume.txt').lines.join('\n')
-    expect(lines).toContain('cyber security')
   })
 
   it('cat /etc/motd greets the visitor', () => {

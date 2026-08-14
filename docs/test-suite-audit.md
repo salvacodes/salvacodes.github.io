@@ -312,3 +312,61 @@ is covered by any test, by choice:
 
 These are all design choices. If any becomes load-bearing — for instance if the gear glyph were ever
 generated rather than authored — it should get a test at that point.
+
+---
+
+## 9. Resume content migration — the legacy career-stage model removed (2026-08-14)
+
+The Resume app carried two parallel career models for the length of the resume-content migration: the
+flat `CareerStage[]` (`ResumeContent.stages`) that shipped the original placeholder content, and the
+`Tenure[]`/`Occupation[]` model (`ResumeContent.tenures`) that replaced it. The flat model was kept
+alive deliberately so every step of the migration left the suite green; this entry closes it out. The
+`CareerStage` interface, `ResumeContent.stages`, the `stages` placeholder array and its `LOREM` filler
+constant are deleted from `src/apps/resume/resume-model.ts` and `src/apps/resume/resume-content.ts`.
+The two remaining `stages: []` fixture stubs — in `printable-resume.browser.test.ts` and
+`resume-app.browser.test.ts` — existed only because the type required the field; they are removed with
+the field.
+
+No behavioural test titled against `stages` or `details.stage` exists in the suite as of this task —
+the describe blocks and renderer assertions that once exercised the flat model were already replaced,
+task by task, by their tenure/occupation equivalents. This entry names, for the record, which surviving
+test now guards each behaviour the old model exercised.
+
+| Old behaviour (flat `CareerStage[]`) | Surviving test | File |
+|---|---|---|
+| Stage ids are unique | `have unique ids` (describe `tenures`) | `resume-content.test.ts` |
+| Stages are ordered oldest first | `are ordered oldest first` (describe `tenures`) | `resume-content.test.ts` |
+| Stages do not overlap in time | `never overlap each other` (describe `tenures`) | `resume-content.test.ts` |
+| — (the flat model had no sub-role concept) | `have unique ids across every tenure`, `fall inside the tenure that holds them`, `are ordered oldest first within a tenure`, `always carry a summary` (describe `occupations`) | `resume-content.test.ts` |
+| — (the flat model had no seniority-grade concept) | `never overlap within a tenure`, `fall inside the tenure that holds them` (describe `grade spans`) | `resume-content.test.ts` |
+| Gaps between stages are called out and explained | `never overlap a tenure`, `always explain themselves` (describe `career gaps`) | `resume-content.test.ts` |
+| `details.stage` renders one collapsed disclosure per stage, oldest first | `nests occupations inside their tenure, collapsed, in order` | `career-timeline.browser.test.ts` |
+| The stage summary/period show without expanding the disclosure | `shows the occupation title and period without expanding` | `career-timeline.browser.test.ts` |
+| The stage narrative sits in the disclosure body and is omitted when unwritten | `keeps the narrative in the disclosure body, and omits it when unwritten` | `career-timeline.browser.test.ts` |
+| A stage always shows a summary or narrative | `always shows the summary, narrative or not` | `career-timeline.browser.test.ts` |
+| One chip renders per stack entry | `renders one chip per stack entry, and none when the stack is unknown` | `career-timeline.browser.test.ts` |
+| Content renders as text, never as markup | `renders content as text, never as markup` | `career-timeline.browser.test.ts` |
+| Evidence chips resolved against `stage` ids and navigated to `details.stage[data-stage-id]` | Evidence-chip navigation now resolves `details.occupation[data-occupation-id]` — `an evidence chip navigates to its occupation and expands it` | `resume-app.browser.test.ts` |
+
+No coverage gap results from this deletion: every invariant and every renderer behaviour the flat model
+had is exercised, by name, above. The only things removed outright are the placeholder `LOREM` prose
+and the `isPlaceholder` stage entries themselves, which described no real behaviour to guard.
+
+---
+
+## 10. Resume content migration — final pass, redundant coverage removed (2026-08-14)
+
+The whole-branch review that closed out the resume content migration flagged three places where a
+behaviour was proven more than once, at more than one level, against the same source — the exact
+pattern §2.3 and the **Testing policy** in `CLAUDE.md` already rule out. This entry records what was
+removed and, per that policy, which surviving test now guards each behaviour.
+
+| Deleted test | File | Why removed | Behaviour now covered by |
+|---|---|---|---|
+| `an evidence chip jumps to the occupation it cites` | `test/e2e/resume.e2e.ts` | Re-proved, against a real built page, exactly what a component test already proves against the real element and real content. Needs nothing the built site provides — no navigation, no cross-origin asset, no browser-specific rendering. | `an evidence chip navigates to its occupation and expands it` (`resume-app.browser.test.ts`) |
+| `cat resume.txt previews the career path` | `apps/terminal/terminal-shell.test.ts` | Asserted only that the current headline reaches `cat resume.txt`'s output — a fact already proven directly against the generated file, and the fact that `cat` can read a real file was already proven with synthetic content. | `carries the current headline` (`apps/terminal/home-directory.test.ts`) for the headline; `cat prints a file line by line` (`terminal-shell.test.ts`) for `cat` itself |
+| the headline assertion inside `boots with the motd scrollback and a live prompt` | `apps/terminal/terminal-app.browser.test.ts` | The boot sequence runs `whoami` as one of its `BOOT_COMMANDS`, so this assertion re-proved `whoami`'s greeting format one level above the shell that owns it. The test itself was not deleted — it still proves the prompt renders, the motd banner appears and the input exists, none of which is redundant — only the headline-specific line was narrowed away. | `whoami introduces Salva` (`terminal-shell.test.ts`) |
+| `offers a reachable contact address` | `apps/resume/resume-content.test.ts` | Checked only that `profile.email` contains `@`. That string can fail only if the email itself is deleted or replaced with something absurd — not a case a legitimate content edit would produce, and not a behaviour a visitor could observe breaking. | *Not guarded.* Its sibling `links out over https only` remains — that one guards a real invariant (no insecure link ships), which this one did not. |
+
+No coverage gap results from any of these four removals: each behaviour worth guarding is still exercised,
+by name, above, at the level closest to where it is produced.

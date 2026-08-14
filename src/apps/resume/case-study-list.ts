@@ -8,8 +8,7 @@ const renderOpener = (study: CaseStudy): HTMLButtonElement => {
   opener.dataset.studyId = study.id
   opener.append(
     textElement('span', 'case-study-title', study.title),
-    textElement('span', 'case-study-sector', study.sector),
-    textElement('span', 'case-study-scale', study.scale)
+    textElement('span', 'case-study-problem', study.problem)
   )
   if (study.isPlaceholder) {
     opener.append(textElement('span', 'draft', 'draft'))

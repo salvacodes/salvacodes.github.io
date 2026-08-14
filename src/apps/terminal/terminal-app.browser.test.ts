@@ -31,7 +31,6 @@ it('boots with the motd scrollback and a live prompt', () => {
   const app = mountTerminal()
   const shadowText = app.shadowRoot?.textContent ?? ''
   expect(shadowText).toContain('user@salva.codes:~$')
-  expect(shadowText).toContain('Salva — cyber security engineering lead')
   expect(shadowText).toContain('zero-dependency desktop')
   expect(inputOf(app)).not.toBeNull()
   cleanup()

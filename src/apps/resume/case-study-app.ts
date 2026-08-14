@@ -16,8 +16,7 @@ const renderFacts = (study: CaseStudy): HTMLElement => {
   const facts = document.createElement('dl')
   facts.className = 'facts'
   const pairs: Array<[string, string]> = [
-    ['Sector', study.sector],
-    ['Scale', study.scale],
+    ['Problem', study.problem],
     ['Constraint', study.constraint]
   ]
   for (const [label, value] of pairs) {
@@ -38,6 +37,15 @@ const renderList = (className: string, heading: string, items: string[]): HTMLEl
 }
 
 const renderNotFound = (): HTMLElement => textElement('p', 'not-found', 'That case study is not available.')
+
+const renderTitle = (study: CaseStudy): HTMLElement => {
+  const header = document.createElement('header')
+  header.append(textElement('h2', 'study-title', study.title))
+  if (study.isPlaceholder) {
+    header.append(textElement('span', 'draft', 'draft'))
+  }
+  return header
+}
 
 export class CaseStudyApp extends HTMLElement {
   static observedAttributes = [STUDY_ID_ATTRIBUTE]
@@ -78,11 +86,12 @@ export class CaseStudyApp extends HTMLElement {
       return
     }
     root.replaceChildren(
-      textElement('h2', 'study-title', study.title),
+      renderTitle(study),
       renderFacts(study),
       renderList('decision', 'Decisions', study.decisions),
       textElement('p', 'outcome', study.outcome),
-      renderList('redaction', 'Withheld under NDA', study.redactions)
+      textElement('p', 'reflection', study.reflection),
+      renderList('redaction', 'Withheld', study.redactions)
     )
   }
 }

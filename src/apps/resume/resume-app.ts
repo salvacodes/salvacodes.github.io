@@ -84,8 +84,8 @@ export class ResumeApp extends HTMLElement {
   #onPaneClick(event: Event): void {
     const target = event.target as HTMLElement
     const chip = target.closest<HTMLElement>('.evidence-chip')
-    if (chip?.dataset.stageId) {
-      this.#revealStage(chip.dataset.stageId)
+    if (chip?.dataset.occupationId) {
+      this.#revealOccupation(chip.dataset.occupationId)
       return
     }
     const opener = target.closest<HTMLElement>('.case-study-opener')
@@ -94,14 +94,16 @@ export class ResumeApp extends HTMLElement {
     }
   }
 
-  #revealStage(stageId: string): void {
+  #revealOccupation(occupationId: string): void {
     this.#select('career')
-    const stage = this.#pane.querySelector<HTMLDetailsElement>(`details.stage[data-stage-id="${stageId}"]`)
-    if (!stage) {
+    const occupation = this.#pane.querySelector<HTMLDetailsElement>(
+      `details.occupation[data-occupation-id="${occupationId}"]`
+    )
+    if (!occupation) {
       return
     }
-    stage.open = true
-    stage.scrollIntoView({ block: 'nearest' })
+    occupation.open = true
+    occupation.scrollIntoView({ block: 'nearest' })
   }
 
   #requestCaseStudy(studyId: string): void {

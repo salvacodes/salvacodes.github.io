@@ -1,16 +1,5 @@
 import type { Period } from './period'
 
-export interface CareerStage {
-  id: string
-  title: string
-  period: Period
-  orgShape: string
-  stack: string[]
-  summary: string
-  narrative: string
-  isPlaceholder?: boolean
-}
-
 export interface Skill {
   name: string
   category: string
@@ -21,11 +10,12 @@ export interface Skill {
 export interface CaseStudy {
   id: string
   title: string
-  sector: string
-  scale: string
+  problem: string
   constraint: string
   decisions: string[]
   outcome: string
+  reflection: string
+  evidence: string[]
   redactions: string[]
   isPlaceholder?: boolean
 }
@@ -35,9 +25,68 @@ export interface SiteArtifact {
   repoUrl: string
 }
 
+export interface ProfileLink {
+  label: string
+  url: string
+}
+
+export interface Profile {
+  name: string
+  headline: string
+  summary: string
+  location: string
+  email: string
+  links: ProfileLink[]
+}
+
+export interface GradeSpan {
+  title: string
+  period: Period
+}
+
+export interface Occupation {
+  id: string
+  title: string
+  period: Period
+  summary: string
+  narrative?: string
+  stack: string[]
+  isPlaceholder?: boolean
+}
+
+export interface Tenure {
+  id: string
+  org: string
+  orgShape: string
+  period: Period
+  grades?: GradeSpan[]
+  occupations: Occupation[]
+  isPlaceholder?: boolean
+}
+
+export interface CareerGap {
+  period: Period
+  note: string
+}
+
+export interface Education {
+  institution: string
+  degree: string
+  field: string
+}
+
+export interface Language {
+  name: string
+  level: string
+}
+
 export interface ResumeContent {
-  stages: CareerStage[]
+  profile: Profile
+  tenures: Tenure[]
+  gaps: CareerGap[]
   skills: Skill[]
   caseStudies: CaseStudy[]
+  education: Education[]
+  languages: Language[]
   site: SiteArtifact
 }
